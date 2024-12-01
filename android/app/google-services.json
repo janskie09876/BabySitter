@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "467669188504",
+    "project_id": "flutterdb-6bfd1",
+    "storage_bucket": "flutterdb-6bfd1.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:467669188504:android:9a38d4bc0f28473867f5ed",
+        "android_client_info": {
+          "package_name": "com.example.babysitter"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC4W5nVQYupY5uBtewVtcbepRtLnuN-7bw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:467669188504:android:821e4b711f51424c67f5ed",
+        "android_client_info": {
+          "package_name": "com.example.babysitter_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC4W5nVQYupY5uBtewVtcbepRtLnuN-7bw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
