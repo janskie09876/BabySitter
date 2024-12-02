@@ -39,6 +39,8 @@ class Nanny {
       role: data['role'] ?? 'Unknown',
     );
   }
+
+  get id => null;
 }
 
 class NannyList extends StatelessWidget {
@@ -82,7 +84,10 @@ class NannyList extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => ViewBabysitter(nanny: nannies[index]),
+                    builder: (context) => ViewBabysitter(
+                      nanny: nannies[index],
+                      nannyId: '',
+                    ),
                   ),
                 );
               },

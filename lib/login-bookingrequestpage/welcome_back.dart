@@ -53,8 +53,9 @@ class _WelcomeBackState extends State<WelcomeBack> {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-                builder: (context) =>
-                    DashboardNanny()), // Assuming BabysitterDashboard exists
+                builder: (context) => DashboardNanny(
+                      nannyId: '',
+                    )), // Assuming BabysitterDashboard exists
           );
         } else {
           // Navigate to the default Dashboard

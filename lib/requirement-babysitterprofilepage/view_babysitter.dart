@@ -5,7 +5,8 @@ import 'package:babysitter/login-bookingrequestpage/book_now.dart'; // Keep this
 class ViewBabysitter extends StatelessWidget {
   final Nanny? nanny; // Use the Nanny class from nannylist.dart
 
-  const ViewBabysitter({Key? key, required this.nanny}) : super(key: key);
+  const ViewBabysitter({Key? key, required this.nanny, required String nannyId})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -144,8 +145,9 @@ class ViewBabysitter extends StatelessWidget {
                       context,
                       MaterialPageRoute(
                         builder: (context) => BookNow(
-                            nanny:
-                                nanny), // This will work now because it's the same Nanny class
+                          nanny: nanny,
+                          nannyId: '',
+                        ), // This will work now because it's the same Nanny class
                       ),
                     );
                   },

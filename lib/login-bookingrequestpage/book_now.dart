@@ -1,11 +1,12 @@
-import 'package:babysitter/home-paymentpage/nannylist.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 class BookNow extends StatefulWidget {
-  final Nanny? nanny;
+  final String nannyId; // Accept Firebase document ID of the nanny
 
-  const BookNow({Key? key, required this.nanny}) : super(key: key);
+  const BookNow({Key? key, required this.nannyId, required nanny})
+      : super(key: key);
 
   @override
   _BookNowState createState() => _BookNowState();
@@ -66,20 +67,32 @@ class _BookNowState extends State<BookNow> {
     );
   }
 
+  void _submitBooking() async {
+    final bookingData = {
+      'nannyId': widget.nannyId, // Use the Firebase `id` of the nanny
+      'userName': nameController.text,
+      'userPhone': phoneController.text,
+      'message': messageController.text,
+      'date': selectedDate != null
+          ? DateFormat('yyyy-MM-dd').format(selectedDate!)
+          : '',
+      'time': selectedTime != null ? selectedTime!.format(context) : '',
+      'status': 'Pending', // Initially set the status as 'Pending'
+    };
+
+    try {
+      await FirebaseFirestore.instance.collection('bookings').add(bookingData);
+      _showConfirmationDialog(context);
+    } catch (e) {
+      print('Error submitting booking: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    if (widget.nanny == null) {
-      return Scaffold(
-        appBar: AppBar(
-          title: const Text('Error'),
-        ),
-        body: const Center(child: Text('No nanny data available')),
-      );
-    }
-
     return Scaffold(
       appBar: AppBar(
-        title: Text('Book with ${widget.nanny!.name}'),
+        title: Text('Book with Nanny'),
         backgroundColor: const Color(0xFFE3838E),
       ),
       body: Padding(
@@ -88,44 +101,6 @@ class _BookNowState extends State<BookNow> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  CircleAvatar(
-                    radius: 50,
-                    backgroundImage: AssetImage('assets/images/liza.jpg'),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          widget.nanny!.name,
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            fontFamily: 'Baloo',
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Row(
-                          children: List.generate(
-                            5,
-                            (index) => Icon(
-                              Icons.star,
-                              color: index < widget.nanny!.rating.toInt()
-                                  ? Colors.amber
-                                  : Colors.grey.shade400,
-                              size: 20,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
               TextField(
                 controller: nameController,
                 decoration: InputDecoration(
@@ -151,15 +126,6 @@ class _BookNowState extends State<BookNow> {
                 maxLines: 4,
               ),
               const SizedBox(height: 20),
-              Text(
-                'Select Booking Date:',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  fontFamily: 'Baloo',
-                ),
-              ),
-              const SizedBox(height: 8),
               GestureDetector(
                 onTap: () => _selectDate(context),
                 child: Container(
@@ -177,22 +143,12 @@ class _BookNowState extends State<BookNow> {
                         selectedDate == null
                             ? 'Choose a date'
                             : DateFormat('yyyy-MM-dd').format(selectedDate!),
-                        style: TextStyle(fontSize: 16, fontFamily: 'Baloo'),
                       ),
                     ],
                   ),
                 ),
               ),
               const SizedBox(height: 20),
-              Text(
-                'Select Booking Time:',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  fontFamily: 'Baloo',
-                ),
-              ),
-              const SizedBox(height: 8),
               GestureDetector(
                 onTap: () => _selectTime(context),
                 child: Container(
@@ -210,7 +166,6 @@ class _BookNowState extends State<BookNow> {
                         selectedTime == null
                             ? 'Choose a time'
                             : selectedTime!.format(context),
-                        style: TextStyle(fontSize: 16, fontFamily: 'Baloo'),
                       ),
                     ],
                   ),
@@ -218,11 +173,7 @@ class _BookNowState extends State<BookNow> {
               ),
               const SizedBox(height: 20),
               ElevatedButton(
-                onPressed: () {
-                  // Send the booking details to nanny dashboard
-                  _showConfirmationDialog(context);
-                  // TODO: Here you would send data to nanny dashboard via API or shared state
-                },
+                onPressed: _submitBooking,
                 child: const Text('Confirm Booking'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFFE3838E),

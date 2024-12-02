@@ -3,7 +3,6 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 
 class NotificationUtils {
   static Future<void> initializeFCM() async {
-    
     await FirebaseMessaging.instance.setAutoInitEnabled(true);
     await _requestNotificationPermission();
     String? token = await _getFirebaseCloudMessageToken();

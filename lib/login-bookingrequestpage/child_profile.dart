@@ -27,7 +27,11 @@ class _ChildrenInputState extends State<ChildrenInput> {
           onPressed: () {
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (context) => BookNow(nanny: nanny)),
+              MaterialPageRoute(
+                  builder: (context) => BookNow(
+                        nanny: nanny,
+                        nannyId: '',
+                      )),
             );
           },
         ),
