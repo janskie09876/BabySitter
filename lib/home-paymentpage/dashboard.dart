@@ -9,7 +9,7 @@ import 'package:babysitter/notifications-stylepage/styles.dart';
 import 'package:babysitter/register-settingspage/settings.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:babysitter/pages/map_page.dart';
+import 'package:babysitter/pages/viewmap1.dart';
 
 class Dashboard extends StatefulWidget {
   @override
@@ -276,7 +276,7 @@ class _DashboardState extends State<Dashboard> {
                 context,
                 MaterialPageRoute(
                   builder: (context) =>
-                      const maps(), // Navigate to the maps page
+                      const ViewMap1(), // Navigate to the maps page
                 ),
               );
             },
