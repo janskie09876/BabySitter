@@ -1,6 +1,8 @@
 import 'package:babysitter/home-paymentpage/nannylist.dart'; // Import only nannylist.dart
-import 'package:flutter/material.dart';
 import 'package:babysitter/login-bookingrequestpage/book_now.dart'; // Keep this import for BookNow
+import 'package:babysitter/menu-chatpage/babysitterchat.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
 
 class ViewBabysitter extends StatelessWidget {
   final Nanny? nanny; // Use the Nanny class from nannylist.dart
@@ -131,9 +133,55 @@ class ViewBabysitter extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 ElevatedButton(
-                  onPressed: () {
-                    // Implement the booking or contact functionality here
-                    print("Contact ${nanny?.name}");
+                  onPressed: () async {
+                    final String currentUserId =
+                        'loggedInUserId'; // Replace with the actual logged-in user ID
+                    final String nannyId =
+                        nanny!.id; // Replace with the nanny's user ID
+                    final String chatId =
+                        '${currentUserId}_${nannyId}'; // Generate a unique chat ID
+
+                    // Check if the chat already exists
+                    final chatDoc = await FirebaseFirestore.instance
+                        .collection('chats')
+                        .doc(chatId)
+                        .get();
+
+                    if (!chatDoc.exists) {
+                      // Create a new chat document if it doesn't exist
+                      await FirebaseFirestore.instance
+                          .collection('chats')
+                          .doc(chatId)
+                          .set({
+                        'babysitterId': currentUserId,
+                        'nannyId': nannyId,
+                      });
+
+                      // Create a messages subcollection for this chat
+                      await FirebaseFirestore.instance
+                          .collection('chats')
+                          .doc(chatId)
+                          .collection('messages')
+                          .add({
+                        'senderId': currentUserId,
+                        'message':
+                            'Hello, I would like to know more about your services.',
+                        'timestamp': FieldValue.serverTimestamp(),
+                      });
+                    }
+
+                    // Navigate to the chat page after creating the chat
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => NannyChatPage(
+                          chatId: chatId, // Pass the unique chatId
+                          nannyName: nanny!.name,
+                          userId: currentUserId,
+                          nannyId: nannyId,
+                        ),
+                      ),
+                    );
                   },
                   child: const Text('Contact Nanny'),
                 ),

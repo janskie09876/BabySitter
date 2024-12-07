@@ -1,13 +1,13 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
-class NannyChatPage extends StatefulWidget {
+class BabysitterChatPage extends StatefulWidget {
   final String chatId;
   final String nannyName;
   final String userId;
   final String nannyId;
 
-  const NannyChatPage({
+  const BabysitterChatPage({
     Key? key,
     required this.chatId,
     required this.nannyName,
@@ -16,10 +16,10 @@ class NannyChatPage extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  _NannyChatPageState createState() => _NannyChatPageState();
+  _BabysitterChatPageState createState() => _BabysitterChatPageState();
 }
 
-class _NannyChatPageState extends State<NannyChatPage> {
+class _BabysitterChatPageState extends State<BabysitterChatPage> {
   final TextEditingController _messageController = TextEditingController();
 
   // Send a message to the chat

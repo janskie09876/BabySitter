@@ -1,11 +1,11 @@
+import 'package:babysitter/account-ratingandreviewpage-terms/editparentprofile.dart';
 import 'package:babysitter/notifications-stylepage/notificationpage.dart';
 import 'package:babysitter/notifications-stylepage/styles.dart';
-import 'package:babysitter/requirement-babysitterprofilepage/requirements.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
-class AccountPage extends StatelessWidget {
+class Parentaccountpage extends StatelessWidget {
   final Color secondaryColor = const Color(0xFFE3838E);
 
   // Fetch the current user's name from Firestore
@@ -131,7 +131,7 @@ class AccountPage extends StatelessWidget {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => RequirementsPage(),
+                              builder: (context) => EditParentProfilePage(),
                             ),
                           );
                           break;

@@ -34,7 +34,7 @@ class Nanny {
       birthDate: data['birthDate'], // Nullable field
       age: data['age'] ?? 0,
       location: data['location'] ?? 'Unknown',
-      phoneNumber: data['phoneNumber'], // Nullable field
+      phoneNumber: data['phone'], // Nullable field
       isAvailable: data['isAvailable'] ?? false,
       role: data['role'] ?? 'Unknown',
     );

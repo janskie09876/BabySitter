@@ -3,18 +3,40 @@ import 'package:babysitter/account-ratingandreviewpage-terms/editbabysitterprofi
 import 'package:babysitter/availability-helpandsupport/FAQ.dart';
 import 'package:babysitter/location-transactionhistorypage/transactionhistorypage.dart';
 import 'package:babysitter/login-bookingrequestpage/booking_list.dart';
-import 'package:babysitter/menu-chatpage/babysitterchat.dart';
+import 'package:babysitter/login-bookingrequestpage/welcome_back.dart';
+import 'package:babysitter/menu-chatpage/nannychatlist.dart';
 import 'package:babysitter/notifications-stylepage/notificationpage.dart';
 import 'package:babysitter/notifications-stylepage/pending_requests.dart';
 import 'package:babysitter/notifications-stylepage/styles.dart';
 import 'package:babysitter/register-settingspage/babysittersettings.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class DashboardNanny extends StatelessWidget {
   final String nannyId; // Use the Firebase document ID of the nanny
 
   const DashboardNanny({Key? key, required this.nannyId}) : super(key: key);
+
+  // Fetch current user's name
+  Future<String> getCurrentUserName() async {
+    try {
+      User? user = FirebaseAuth.instance.currentUser; // Get the current user
+      if (user != null) {
+        // Query Firestore for the user's document using the UID
+        DocumentSnapshot userDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid) // Match document ID with the UID
+            .get();
+
+        // Return the name field or default to "Guest"
+        return userDoc['name'] ?? "Guest";
+      }
+    } catch (e) {
+      print("Error fetching user name: $e");
+    }
+    return "Guest"; // Default value if no user is logged in
+  }
 
   // Fetch all bookings (both Pending and Confirmed) for the nanny
   Stream<List<Map<String, dynamic>>> fetchBookings(String status) {
@@ -71,32 +93,48 @@ class DashboardNanny extends StatelessWidget {
           ),
         ],
       ),
-      body: DefaultTabController(
-        length: 2, // Two tabs: Pending and Confirmed
-        child: Column(
-          children: [
-            const TabBar(
-              labelColor: AppStyles
-                  .secondaryColor, // Use secondaryColor from style.dart
-              unselectedLabelColor: Colors.grey,
-              indicatorColor: AppStyles
-                  .secondaryColor, // Use secondaryColor from style.dart
-              tabs: [
-                Tab(text: 'Booking Requests'),
-                Tab(text: 'Confirmed Requests'),
-              ],
-            ),
-            Expanded(
-              child: TabBarView(
+      body: FutureBuilder<String>(
+        // Fetch user's name dynamically
+        future: getCurrentUserName(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(
+                child: CircularProgressIndicator()); // Show loading indicator
+          } else if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          } else if (snapshot.hasData) {
+            String userName = snapshot.data!; // Get user's name
+
+            return DefaultTabController(
+              length: 2, // Two tabs: Pending and Confirmed
+              child: Column(
                 children: [
-                  PendingRequestsList(
-                      nannyId: nannyId, fetchBookings: fetchBookings),
-                  BookingsList(nannyId: nannyId, fetchBookings: fetchBookings),
+                  const TabBar(
+                    labelColor: AppStyles.secondaryColor,
+                    unselectedLabelColor: Colors.grey,
+                    indicatorColor: AppStyles.secondaryColor,
+                    tabs: [
+                      Tab(text: 'Booking Requests'),
+                      Tab(text: 'Confirmed Requests'),
+                    ],
+                  ),
+                  Expanded(
+                    child: TabBarView(
+                      children: [
+                        PendingRequestsList(
+                            nannyId: nannyId, fetchBookings: fetchBookings),
+                        BookingsList(
+                            nannyId: nannyId, fetchBookings: fetchBookings),
+                      ],
+                    ),
+                  ),
                 ],
               ),
-            ),
-          ],
-        ),
+            );
+          } else {
+            return Center(child: Text('No data found.'));
+          }
+        },
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       floatingActionButton: CircleAvatar(
@@ -136,7 +174,12 @@ class DashboardNanny extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => BabysitterChatPage(),
+                      builder: (context) => BabysitterChatPage(
+                        chatId: '',
+                        nannyName: '',
+                        userId: '',
+                        nannyId: '',
+                      ),
                     ),
                   );
                 },
@@ -195,12 +238,24 @@ class DashboardNanny extends StatelessWidget {
                     radius: 24,
                     backgroundImage: AssetImage('assets/images/profile.jpg'),
                   ),
-                  title: Text(
-                    'Echizen Ryoma',
-                    style: TextStyle(
-                      fontFamily: 'Baloo', // Title font
-                      fontWeight: FontWeight.bold,
-                    ),
+                  title: FutureBuilder<String>(
+                    future:
+                        getCurrentUserName(), // Fetch user's name dynamically
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return Text('Loading...');
+                      } else if (snapshot.hasData) {
+                        return Text(
+                          snapshot.data!, // Display dynamic user name
+                          style: TextStyle(
+                            fontFamily: 'Baloo', // Title font
+                            fontWeight: FontWeight.bold,
+                          ),
+                        );
+                      } else {
+                        return Text('Unknown'); // Fallback if no data
+                      }
+                    },
                   ),
                 ),
                 Divider(),
@@ -241,8 +296,22 @@ class DashboardNanny extends StatelessWidget {
                     ),
                   );
                 }),
-                _buildMenuItem(context, Icons.logout, 'Logout', () {
-                  Navigator.pop(context);
+                _buildMenuItem(context, Icons.logout, 'Logout', () async {
+                  try {
+                    await FirebaseAuth.instance.signOut(); // Firebase logout
+                    Navigator.pop(context);
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => WelcomeBack(),
+                      ),
+                      (route) => false,
+                    );
+                  } catch (e) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Logout failed: $e')),
+                    );
+                  }
                 }),
               ],
             ),
