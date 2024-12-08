@@ -1,77 +1,87 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
-class ChatPage extends StatelessWidget {
-  final String chatId; // Unique identifier for the chat session
+class ChatPage extends StatefulWidget {
+  final String chatId;
+  final String nannyName;
+  final String userId;
+  final String nannyId;
+  final String babysitterName;
 
-  const ChatPage(
-      {Key? key,
-      required this.chatId,
-      required String userId,
-      required nannyId,
-      required String nannyName})
-      : super(key: key);
+  const ChatPage({
+    Key? key,
+    required this.chatId,
+    required this.nannyName,
+    required this.userId,
+    required this.nannyId,
+    required this.babysitterName,
+  }) : super(key: key);
 
-  Stream<List<Map<String, dynamic>>> fetchMessages() {
-    return FirebaseFirestore.instance
-        .collection('chats')
-        .doc(chatId)
-        .collection('messages')
-        .orderBy('timestamp', descending: true)
-        .snapshots()
-        .map((snapshot) => snapshot.docs.map((doc) {
-              return doc.data();
-            }).toList());
-  }
+  @override
+  _ChatPageState createState() => _ChatPageState();
+}
 
-  void sendMessage(String message) async {
-    try {
-      await FirebaseFirestore.instance
-          .collection('chats')
-          .doc(chatId)
-          .collection('messages')
-          .add({
-        'message': message,
-        'timestamp': FieldValue.serverTimestamp(),
-        'sender': 'currentUserId', // Replace with the logged-in user's ID
-      });
-    } catch (e) {
-      print('Error sending message: $e');
+class _ChatPageState extends State<ChatPage> {
+  final TextEditingController _messageController = TextEditingController();
+
+  void _sendMessage() async {
+    if (_messageController.text.isNotEmpty) {
+      try {
+        await FirebaseFirestore.instance
+            .collection('chats')
+            .doc(widget.chatId)
+            .collection('messages')
+            .add({
+          'senderId': widget.userId,
+          'message': _messageController.text,
+          'timestamp': FieldValue.serverTimestamp(),
+        });
+
+        setState(() {
+          _messageController.clear();
+        });
+      } catch (e) {
+        print("Error sending message: $e");
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final TextEditingController messageController = TextEditingController();
-
     return Scaffold(
-      appBar: AppBar(title: const Text('Chat')),
+      appBar: AppBar(title: Text("Chat with ${widget.nannyName}")),
       body: Column(
         children: [
           Expanded(
-            child: StreamBuilder<List<Map<String, dynamic>>>(
-              stream: fetchMessages(),
+            child: StreamBuilder(
+              stream: FirebaseFirestore.instance
+                  .collection('chats')
+                  .doc(widget.chatId)
+                  .collection('messages')
+                  .orderBy('timestamp', descending: true)
+                  .snapshots(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
-                } else if (snapshot.hasError) {
-                  return Center(child: Text('Error: ${snapshot.error}'));
-                } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return const Center(child: Text('No messages yet.'));
                 }
 
-                final messages = snapshot.data!;
-                return ListView.builder(
-                  reverse: true,
-                  itemCount: messages.length,
-                  itemBuilder: (context, index) {
-                    final message = messages[index];
-                    return ListTile(
-                      title: Text(message['message'] ?? ''),
-                      subtitle: Text(message['sender'] ?? 'Unknown sender'),
-                    );
-                  },
-                );
+                if (snapshot.hasData && snapshot.data!.docs.isNotEmpty) {
+                  var messages = snapshot.data!.docs;
+
+                  return ListView.builder(
+                    reverse: true,
+                    itemCount: messages.length,
+                    itemBuilder: (context, index) {
+                      var message = messages[index];
+                      return ListTile(
+                        title: Text(message['message']),
+                        subtitle: Text('Sent by: ${message['senderId']}'),
+                      );
+                    },
+                  );
+                }
+
+                return const Center(child: Text("No messages yet"));
               },
             ),
           ),
@@ -81,21 +91,18 @@ class ChatPage extends StatelessWidget {
               children: [
                 Expanded(
                   child: TextField(
-                    controller: messageController,
-                    decoration: const InputDecoration(
-                      hintText: 'Enter your message',
-                      border: OutlineInputBorder(),
+                    controller: _messageController,
+                    decoration: InputDecoration(
+                      hintText: "Type your message...",
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8.0),
+                      ),
                     ),
                   ),
                 ),
                 IconButton(
                   icon: const Icon(Icons.send),
-                  onPressed: () {
-                    if (messageController.text.trim().isNotEmpty) {
-                      sendMessage(messageController.text.trim());
-                      messageController.clear();
-                    }
-                  },
+                  onPressed: _sendMessage,
                 ),
               ],
             ),

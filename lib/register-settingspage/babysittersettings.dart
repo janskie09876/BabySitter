@@ -1,5 +1,4 @@
 import 'package:babysitter/account-ratingandreviewpage-terms/termspage.dart';
-import 'package:babysitter/home-paymentpage/dashboard.dart';
 import 'package:babysitter/home-paymentpage/dashboard_nanny.dart';
 import 'package:babysitter/location-transactionhistorypage/transactionhistorypage.dart';
 import 'package:flutter/material.dart';
@@ -65,6 +64,9 @@ class _Settings6DelaCernaState extends State<Settings6DelaCerna> {
                               MaterialPageRoute(
                                 builder: (context) => DashboardNanny(
                                   nannyId: '',
+                                  chatId: '',
+                                  babysitterName: '',
+                                  userId: '',
                                 ), // babysitter Dashboard page
                               ),
                             );

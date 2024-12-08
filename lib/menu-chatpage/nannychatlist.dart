@@ -1,48 +1,46 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
-class BabysitterChatPage extends StatefulWidget {
+class BabyChatPage extends StatefulWidget {
   final String chatId;
   final String nannyName;
   final String userId;
   final String nannyId;
+  final String babysitterName;
 
-  const BabysitterChatPage({
+  const BabyChatPage({
     Key? key,
     required this.chatId,
     required this.nannyName,
     required this.userId,
     required this.nannyId,
+    required this.babysitterName,
   }) : super(key: key);
 
   @override
-  _BabysitterChatPageState createState() => _BabysitterChatPageState();
+  _BabyChatPageState createState() => _BabyChatPageState();
 }
 
-class _BabysitterChatPageState extends State<BabysitterChatPage> {
+class _BabyChatPageState extends State<BabyChatPage> {
   final TextEditingController _messageController = TextEditingController();
 
-  // Send a message to the chat
+  // Send message to Firestore
   void _sendMessage() async {
     if (_messageController.text.isNotEmpty) {
-      try {
-        await FirebaseFirestore.instance
-            .collection('chats')
-            .doc(widget.chatId)
-            .collection('messages')
-            .add({
-          'senderId': widget.userId,
-          'message': _messageController.text,
-          'timestamp': FieldValue.serverTimestamp(),
-        });
+      final String message = _messageController.text;
 
-        setState(() {
-          _messageController.clear();
-        });
-      } catch (e) {
-        // Handle any errors while sending the message
-        print("Error sending message: $e");
-      }
+      await FirebaseFirestore.instance
+          .collection('chats')
+          .doc(widget.chatId)
+          .collection('messages')
+          .add({
+        'senderId': widget.userId,
+        'receiverId': widget.nannyId,
+        'message': message,
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+
+      _messageController.clear(); // Clear the message input field
     }
   }
 
@@ -51,49 +49,50 @@ class _BabysitterChatPageState extends State<BabysitterChatPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Chat with ${widget.nannyName}'),
-        backgroundColor: const Color(0xFFE3838E),
       ),
       body: Column(
         children: [
+          // Chat messages list
           Expanded(
-            child: StreamBuilder(
+            child: StreamBuilder<QuerySnapshot>(
               stream: FirebaseFirestore.instance
                   .collection('chats')
                   .doc(widget.chatId)
                   .collection('messages')
-                  .orderBy('timestamp')
+                  .orderBy('timestamp', descending: true)
                   .snapshots(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Center(child: CircularProgressIndicator());
+                  return const Center(child: CircularProgressIndicator());
                 }
-
+                if (snapshot.hasError) {
+                  return Center(child: Text('Error: ${snapshot.error}'));
+                }
                 if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                  return Center(child: Text('No messages yet.'));
+                  return const Center(child: Text('No messages yet'));
                 }
 
                 final messages = snapshot.data!.docs;
-
                 return ListView.builder(
+                  reverse: true, // Show the most recent messages at the bottom
                   itemCount: messages.length,
                   itemBuilder: (context, index) {
-                    final message = messages[index];
-                    final senderId = message['senderId'] ?? "Unknown";
-                    final messageText =
-                        message['message'] ?? "No message content";
-                    final timestamp =
-                        message['timestamp']?.toDate() ?? DateTime.now();
+                    final messageData = messages[index];
+                    final senderId = messageData['senderId'];
+                    final message = messageData['message'];
 
                     return ListTile(
-                      title: Text(senderId),
-                      subtitle: Text(messageText),
-                      trailing: Text("${timestamp.hour}:${timestamp.minute}"),
+                      title: Text(senderId == widget.userId
+                          ? 'You: $message'
+                          : '${widget.nannyName}: $message'),
                     );
                   },
                 );
               },
             ),
           ),
+
+          // Message input field
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: Row(
@@ -101,14 +100,14 @@ class _BabysitterChatPageState extends State<BabysitterChatPage> {
                 Expanded(
                   child: TextField(
                     controller: _messageController,
-                    decoration: InputDecoration(
-                      border: OutlineInputBorder(),
+                    decoration: const InputDecoration(
                       hintText: 'Type a message...',
+                      border: OutlineInputBorder(),
                     ),
                   ),
                 ),
                 IconButton(
-                  icon: Icon(Icons.send),
+                  icon: const Icon(Icons.send),
                   onPressed: _sendMessage,
                 ),
               ],

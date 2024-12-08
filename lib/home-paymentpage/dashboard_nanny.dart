@@ -4,6 +4,7 @@ import 'package:babysitter/availability-helpandsupport/FAQ.dart';
 import 'package:babysitter/location-transactionhistorypage/transactionhistorypage.dart';
 import 'package:babysitter/login-bookingrequestpage/booking_list.dart';
 import 'package:babysitter/login-bookingrequestpage/welcome_back.dart';
+import 'package:babysitter/menu-chatpage/babysitterchat.dart';
 import 'package:babysitter/menu-chatpage/nannychatlist.dart';
 import 'package:babysitter/notifications-stylepage/notificationpage.dart';
 import 'package:babysitter/notifications-stylepage/pending_requests.dart';
@@ -15,8 +16,17 @@ import 'package:flutter/material.dart';
 
 class DashboardNanny extends StatelessWidget {
   final String nannyId; // Use the Firebase document ID of the nanny
+  final String chatId;
+  final String babysitterName; // Babysitter's nam
+  final String userId; // Babysitter's ID
 
-  const DashboardNanny({Key? key, required this.nannyId}) : super(key: key);
+  const DashboardNanny({
+    Key? key,
+    required this.chatId,
+    required this.babysitterName,
+    required this.nannyId,
+    required this.userId,
+  }) : super(key: key);
 
   // Fetch current user's name
   Future<String> getCurrentUserName() async {
@@ -161,7 +171,13 @@ class DashboardNanny extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => DashboardNanny(nannyId: nannyId),
+                      builder: (context) => NannyChatPage(
+                        chatId: '',
+                        nannyName: '',
+                        userId: '',
+                        nannyId: '',
+                        babysitterName: '',
+                      ),
                     ),
                   );
                 },
@@ -174,11 +190,12 @@ class DashboardNanny extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => BabysitterChatPage(
+                      builder: (context) => BabyChatPage(
                         chatId: '',
                         nannyName: '',
                         userId: '',
                         nannyId: '',
+                        babysitterName: '',
                       ),
                     ),
                   );

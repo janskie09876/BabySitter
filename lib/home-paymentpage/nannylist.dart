@@ -4,17 +4,19 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 class Nanny {
+  final String id; // Add id property
   final String name;
   final double rating;
   final String availability;
-  final String? birthDate; // Made nullable
+  final String? birthDate;
   final int age;
   final String location;
-  final String? phoneNumber; // Made nullable
+  final String? phoneNumber;
   final bool isAvailable;
   final String role;
 
   Nanny({
+    required this.id, // Ensure the id is passed in the constructor
     required this.name,
     required this.rating,
     required this.availability,
@@ -28,19 +30,18 @@ class Nanny {
 
   factory Nanny.fromMap(Map<String, dynamic> data) {
     return Nanny(
+      id: data['id'] ?? '', // Use the Firestore document id here
       name: data['name'] ?? 'Unknown',
       rating: (data['rating'] ?? 0).toDouble(),
       availability: data['availability'] ?? 'Unavailable',
-      birthDate: data['birthDate'], // Nullable field
+      birthDate: data['birthDate'],
       age: data['age'] ?? 0,
       location: data['location'] ?? 'Unknown',
-      phoneNumber: data['phone'], // Nullable field
+      phoneNumber: data['phone'],
       isAvailable: data['isAvailable'] ?? false,
       role: data['role'] ?? 'Unknown',
     );
   }
-
-  get id => null;
 }
 
 class NannyList extends StatelessWidget {

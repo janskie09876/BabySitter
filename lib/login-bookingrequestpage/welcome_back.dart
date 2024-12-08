@@ -2,9 +2,9 @@ import 'package:babysitter/home-paymentpage/dashboard.dart';
 import 'package:babysitter/home-paymentpage/dashboard_nanny.dart';
 import 'package:babysitter/register-settingspage/changepass.dart';
 import 'package:babysitter/register-settingspage/registration.dart';
-import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 
 class WelcomeBack extends StatefulWidget {
   @override
@@ -55,6 +55,9 @@ class _WelcomeBackState extends State<WelcomeBack> {
             MaterialPageRoute(
                 builder: (context) => DashboardNanny(
                       nannyId: '',
+                      chatId: '',
+                      babysitterName: '',
+                      userId: '',
                     )), // Assuming BabysitterDashboard exists
           );
         } else {

@@ -2,6 +2,7 @@ import 'package:babysitter/home-paymentpage/nannylist.dart'; // Import only nann
 import 'package:babysitter/login-bookingrequestpage/book_now.dart'; // Keep this import for BookNow
 import 'package:babysitter/menu-chatpage/babysitterchat.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class ViewBabysitter extends StatelessWidget {
@@ -134,21 +135,25 @@ class ViewBabysitter extends StatelessWidget {
               children: [
                 ElevatedButton(
                   onPressed: () async {
+                    // Get the current logged-in user's ID
                     final String currentUserId =
-                        'loggedInUserId'; // Replace with the actual logged-in user ID
-                    final String nannyId =
-                        nanny!.id; // Replace with the nanny's user ID
-                    final String chatId =
-                        '${currentUserId}_${nannyId}'; // Generate a unique chat ID
+                        FirebaseAuth.instance.currentUser!.uid;
 
-                    // Check if the chat already exists
+                    // Retrieve the selected nanny's details
+                    final String nannyId = nanny!
+                        .id; // Ensure `nanny.id` is correctly passed from Nanny
+
+                    final String chatId =
+                        '${currentUserId}_$nannyId'; // Generate a unique chat ID
+
+                    // Check if chat already exists
                     final chatDoc = await FirebaseFirestore.instance
                         .collection('chats')
                         .doc(chatId)
                         .get();
 
                     if (!chatDoc.exists) {
-                      // Create a new chat document if it doesn't exist
+                      // Create new chat document if doesn't exist
                       await FirebaseFirestore.instance
                           .collection('chats')
                           .doc(chatId)
@@ -157,7 +162,7 @@ class ViewBabysitter extends StatelessWidget {
                         'nannyId': nannyId,
                       });
 
-                      // Create a messages subcollection for this chat
+                      // Create a subcollection for messages
                       await FirebaseFirestore.instance
                           .collection('chats')
                           .doc(chatId)
@@ -175,10 +180,12 @@ class ViewBabysitter extends StatelessWidget {
                       context,
                       MaterialPageRoute(
                         builder: (context) => NannyChatPage(
-                          chatId: chatId, // Pass the unique chatId
+                          chatId: chatId, // Pass the unique chat ID
                           nannyName: nanny!.name,
                           userId: currentUserId,
                           nannyId: nannyId,
+                          babysitterName:
+                              '', // Add the name of the babysitter if needed
                         ),
                       ),
                     );

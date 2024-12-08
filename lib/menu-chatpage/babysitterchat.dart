@@ -6,6 +6,7 @@ class NannyChatPage extends StatefulWidget {
   final String nannyName;
   final String userId;
   final String nannyId;
+  final String babysitterName;
 
   const NannyChatPage({
     Key? key,
@@ -13,6 +14,7 @@ class NannyChatPage extends StatefulWidget {
     required this.nannyName,
     required this.userId,
     required this.nannyId,
+    required this.babysitterName,
   }) : super(key: key);
 
   @override
@@ -22,13 +24,13 @@ class NannyChatPage extends StatefulWidget {
 class _NannyChatPageState extends State<NannyChatPage> {
   final TextEditingController _messageController = TextEditingController();
 
-  // Send a message to the chat
+  // Method to send a new message
   void _sendMessage() async {
     if (_messageController.text.isNotEmpty) {
       try {
         await FirebaseFirestore.instance
             .collection('chats')
-            .doc(widget.chatId)
+            .doc(widget.chatId) // Use the provided chatId
             .collection('messages')
             .add({
           'senderId': widget.userId,
@@ -36,11 +38,9 @@ class _NannyChatPageState extends State<NannyChatPage> {
           'timestamp': FieldValue.serverTimestamp(),
         });
 
-        setState(() {
-          _messageController.clear();
-        });
+        // Clear the text field after sending
+        _messageController.clear();
       } catch (e) {
-        // Handle any errors while sending the message
         print("Error sending message: $e");
       }
     }
@@ -50,44 +50,40 @@ class _NannyChatPageState extends State<NannyChatPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Chat with ${widget.nannyName}'),
-        backgroundColor: const Color(0xFFE3838E),
+        title: Text('Chat with ${widget.babysitterName}'),
       ),
       body: Column(
         children: [
           Expanded(
-            child: StreamBuilder(
+            child: StreamBuilder<QuerySnapshot>(
               stream: FirebaseFirestore.instance
                   .collection('chats')
                   .doc(widget.chatId)
                   .collection('messages')
-                  .orderBy('timestamp')
+                  .orderBy('timestamp', descending: true)
                   .snapshots(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Center(child: CircularProgressIndicator());
+                  return const Center(child: CircularProgressIndicator());
                 }
-
+                if (snapshot.hasError) {
+                  return const Center(child: Text('Error loading messages'));
+                }
                 if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                  return Center(child: Text('No messages yet.'));
+                  return const Center(child: Text('No messages yet'));
                 }
 
                 final messages = snapshot.data!.docs;
-
                 return ListView.builder(
+                  reverse: true,
                   itemCount: messages.length,
                   itemBuilder: (context, index) {
                     final message = messages[index];
-                    final senderId = message['senderId'] ?? "Unknown";
-                    final messageText =
-                        message['message'] ?? "No message content";
-                    final timestamp =
-                        message['timestamp']?.toDate() ?? DateTime.now();
-
                     return ListTile(
-                      title: Text(senderId),
-                      subtitle: Text(messageText),
-                      trailing: Text("${timestamp.hour}:${timestamp.minute}"),
+                      title: Text(message['senderId'] == widget.userId
+                          ? 'You'
+                          : widget.nannyName),
+                      subtitle: Text(message['message']),
                     );
                   },
                 );
@@ -101,14 +97,14 @@ class _NannyChatPageState extends State<NannyChatPage> {
                 Expanded(
                   child: TextField(
                     controller: _messageController,
-                    decoration: InputDecoration(
+                    decoration: const InputDecoration(
+                      hintText: 'Type your message...',
                       border: OutlineInputBorder(),
-                      hintText: 'Type a message...',
                     ),
                   ),
                 ),
                 IconButton(
-                  icon: Icon(Icons.send),
+                  icon: const Icon(Icons.send),
                   onPressed: _sendMessage,
                 ),
               ],
