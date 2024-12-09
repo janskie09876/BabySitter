@@ -50,7 +50,7 @@ class NannyList extends StatelessWidget {
   Future<List<Nanny>> fetchNannies() async {
     try {
       final snapshot =
-          await FirebaseFirestore.instance.collection('users').get();
+          await FirebaseFirestore.instance.collection('babysitters').get();
 
       return snapshot.docs
           .map((doc) => Nanny.fromMap(doc.data() as Map<String, dynamic>))

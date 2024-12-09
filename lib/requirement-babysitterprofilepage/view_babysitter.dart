@@ -1,19 +1,27 @@
-import 'package:babysitter/home-paymentpage/nannylist.dart'; // Import only nannylist.dart
-import 'package:babysitter/login-bookingrequestpage/book_now.dart'; // Keep this import for BookNow
+import 'package:babysitter/home-paymentpage/nannylist.dart';
+import 'package:babysitter/login-bookingrequestpage/book_now.dart';
 import 'package:babysitter/menu-chatpage/babysitterchat.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
-class ViewBabysitter extends StatelessWidget {
+class ViewBabysitter extends StatefulWidget {
   final Nanny? nanny; // Use the Nanny class from nannylist.dart
 
   const ViewBabysitter({Key? key, required this.nanny, required String nannyId})
       : super(key: key);
 
   @override
+  _ViewBabysitterState createState() => _ViewBabysitterState();
+}
+
+class _ViewBabysitterState extends State<ViewBabysitter> {
+  bool isError = false;
+  String errorMessage = '';
+
+  @override
   Widget build(BuildContext context) {
-    if (nanny == null) {
+    if (widget.nanny == null) {
       return Scaffold(
         appBar: AppBar(title: const Text("No Nanny Selected")),
         body: const Center(child: Text("Nanny data is not available")),
@@ -22,7 +30,7 @@ class ViewBabysitter extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('${nanny!.name}\'s Profile'),
+        title: Text('${widget.nanny!.name}\'s Profile'),
         backgroundColor: const Color(0xFFE3838E),
       ),
       body: Padding(
@@ -43,7 +51,7 @@ class ViewBabysitter extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        nanny!.name,
+                        widget.nanny!.name,
                         style: const TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
@@ -56,7 +64,7 @@ class ViewBabysitter extends StatelessWidget {
                           5,
                           (index) => Icon(
                             Icons.star,
-                            color: index < nanny!.rating.toInt()
+                            color: index < widget.nanny!.rating.toInt()
                                 ? Colors.amber
                                 : Colors.grey.shade400,
                             size: 20,
@@ -68,16 +76,19 @@ class ViewBabysitter extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
-                          color: nanny!.isAvailable
+                          color: widget.nanny!.isAvailable
                               ? Colors.green.shade100
                               : Colors.grey.shade300,
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
-                          nanny!.isAvailable ? 'Available' : 'Not Available',
+                          widget.nanny!.isAvailable
+                              ? 'Available'
+                              : 'Not Available',
                           style: TextStyle(
-                            color:
-                                nanny!.isAvailable ? Colors.green : Colors.grey,
+                            color: widget.nanny!.isAvailable
+                                ? Colors.green
+                                : Colors.grey,
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
                             fontFamily: 'Baloo',
@@ -100,16 +111,16 @@ class ViewBabysitter extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 8),
-            Text('Age: ${nanny?.age}',
+            Text('Age: ${widget.nanny?.age}',
                 style: const TextStyle(fontFamily: 'Baloo', fontSize: 16)),
             const SizedBox(height: 8),
-            Text('Date of Birth: ${nanny?.birthDate}',
+            Text('Date of Birth: ${widget.nanny?.birthDate}',
                 style: const TextStyle(fontFamily: 'Baloo', fontSize: 16)),
             const SizedBox(height: 8),
-            Text('Location: ${nanny?.location}',
+            Text('Location: ${widget.nanny?.location}',
                 style: const TextStyle(fontFamily: 'Baloo', fontSize: 16)),
             const SizedBox(height: 8),
-            Text('Phone Number: ${nanny?.phoneNumber}',
+            Text('Phone Number: ${widget.nanny?.phoneNumber}',
                 style: const TextStyle(fontFamily: 'Baloo', fontSize: 16)),
 
             const SizedBox(height: 20),
@@ -124,7 +135,7 @@ class ViewBabysitter extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 8),
-            Text(nanny!.availability,
+            Text(widget.nanny!.availability,
                 style: const TextStyle(fontFamily: 'Baloo', fontSize: 16)),
 
             const SizedBox(height: 20),
@@ -135,60 +146,89 @@ class ViewBabysitter extends StatelessWidget {
               children: [
                 ElevatedButton(
                   onPressed: () async {
-                    // Get the current logged-in user's ID
                     final String currentUserId =
                         FirebaseAuth.instance.currentUser!.uid;
+                    final String nannyId = widget
+                        .nanny!.id; // Ensure `widget.nanny` is passed correctly
+                    final String nannyName = widget.nanny!
+                        .name; // Ensure `widget.nanny.name` is passed correctly
 
-                    // Retrieve the selected nanny's details
-                    final String nannyId = nanny!
-                        .id; // Ensure `nanny.id` is correctly passed from Nanny
+                    // Create a unique chatId by combining nannyId and parentId (currentUserId)
+                    String chatId = (currentUserId.hashCode <= nannyId.hashCode)
+                        ? '$currentUserId-$nannyId'
+                        : '$nannyId-$currentUserId';
 
-                    final String chatId =
-                        '${currentUserId}_$nannyId'; // Generate a unique chat ID
-
-                    // Check if chat already exists
-                    final chatDoc = await FirebaseFirestore.instance
+                    // Query Firestore to check if the chat already exists
+                    final chatSnapshot = await FirebaseFirestore.instance
                         .collection('chats')
                         .doc(chatId)
                         .get();
 
-                    if (!chatDoc.exists) {
-                      // Create new chat document if doesn't exist
+                    if (chatSnapshot.exists) {
+                      // Chat already exists, navigate to the chat page
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => BabysitterChatPage(
+                            chatId: chatId,
+                            nannyName: nannyName,
+                            userId: currentUserId,
+                            nannyId: nannyId,
+                            babysitterName: '',
+                          ),
+                        ),
+                      );
+                    } else {
+                      // Chat doesn't exist, create a new chat
                       await FirebaseFirestore.instance
                           .collection('chats')
                           .doc(chatId)
                           .set({
-                        'babysitterId': currentUserId,
-                        'nannyId': nannyId,
+                        'createdAt': FieldValue.serverTimestamp(),
+                        'user1': nannyId,
+                        'user2': currentUserId,
                       });
 
-                      // Create a subcollection for messages
+                      // Send the initial message from the parent (current user)
+                      final String initialMessage =
+                          'Hello, I would like to know more about your services.';
                       await FirebaseFirestore.instance
                           .collection('chats')
                           .doc(chatId)
                           .collection('messages')
                           .add({
                         'senderId': currentUserId,
-                        'message':
-                            'Hello, I would like to know more about your services.',
+                        'receiverId': nannyId,
+                        'message': initialMessage,
                         'timestamp': FieldValue.serverTimestamp(),
                       });
-                    }
 
-                    // Navigate to the chat page after creating the chat
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => NannyChatPage(
-                          chatId: chatId, // Pass the unique chat ID
-                          nannyName: nanny!.name,
-                          userId: currentUserId,
-                          nannyId: nannyId,
-                          babysitterName:
-                              '', // Add the name of the babysitter if needed
+                      // Send the initial message from the nanny (as a reply)
+                      await FirebaseFirestore.instance
+                          .collection('chats')
+                          .doc(chatId)
+                          .collection('messages')
+                          .add({
+                        'senderId': nannyId,
+                        'receiverId': currentUserId,
+                        'message': initialMessage,
+                        'timestamp': FieldValue.serverTimestamp(),
+                      });
+
+                      // Navigate to the chat page after creating the message
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => BabysitterChatPage(
+                            chatId: chatId,
+                            nannyName: nannyName,
+                            userId: currentUserId,
+                            nannyId: nannyId,
+                            babysitterName: '',
+                          ),
                         ),
-                      ),
-                    );
+                      );
+                    }
                   },
                   child: const Text('Contact Nanny'),
                 ),
@@ -200,7 +240,7 @@ class ViewBabysitter extends StatelessWidget {
                       context,
                       MaterialPageRoute(
                         builder: (context) => BookNow(
-                          nanny: nanny,
+                          nanny: widget.nanny,
                           nannyId: '',
                         ), // This will work now because it's the same Nanny class
                       ),

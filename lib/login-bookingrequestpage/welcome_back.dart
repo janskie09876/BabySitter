@@ -38,40 +38,67 @@ class _WelcomeBackState extends State<WelcomeBack> {
       // Get the logged-in user's ID
       User user = userCredential.user!;
 
-      // Retrieve user role from Firestore
-      DocumentSnapshot userDoc = await FirebaseFirestore.instance
-          .collection('users')
+      // Retrieve user data from both the "parents" and "babysitters" collections
+      DocumentSnapshot userDocParent = await FirebaseFirestore.instance
+          .collection('parents') // Check the parents collection first
           .doc(user.uid)
           .get();
 
-      if (userDoc.exists) {
-        String role = userDoc['role'];
+      DocumentSnapshot userDocBabysitter = await FirebaseFirestore.instance
+          .collection('babysitters') // Check the babysitters collection
+          .doc(user.uid)
+          .get();
+
+      if (userDocParent.exists) {
+        // User is found in the "parents" collection
+        String role = userDocParent['role'];
+
+        // Navigate based on the role
+        if (role == "Parent") {
+          // Navigate to the Parent Dashboard
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+                builder: (context) =>
+                    Dashboard()), // Replace with actual Parent Dashboard
+          );
+        } else {
+          // Handle unexpected role
+          setState(() {
+            isError = true;
+            errorMessage = "Role mismatch for Parent user.";
+          });
+        }
+      } else if (userDocBabysitter.exists) {
+        // User is found in the "babysitters" collection
+        String role = userDocBabysitter['role'];
 
         // Navigate based on the role
         if (role == "Babysitter") {
-          // Navigate to Babysitter Dashboard if the role is Babysitter
+          // Navigate to the Babysitter Dashboard
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
                 builder: (context) => DashboardNanny(
-                      nannyId: '',
                       chatId: '',
                       babysitterName: '',
+                      nannyId: '',
                       userId: '',
-                    )), // Assuming BabysitterDashboard exists
+                    )), // Replace with actual Babysitter Dashboard
           );
         } else {
-          // Navigate to the default Dashboard
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => Dashboard()),
-          );
+          // Handle unexpected role
+          setState(() {
+            isError = true;
+            errorMessage = "Role mismatch for Babysitter user.";
+          });
         }
       } else {
-        // If no role found in Firestore, handle it as an error
+        // User is not found in either collection
         setState(() {
           isError = true;
-          errorMessage = "User role not found.";
+          errorMessage =
+              "User not found in either parents or babysitters collection.";
         });
       }
     } on FirebaseAuthException catch (e) {

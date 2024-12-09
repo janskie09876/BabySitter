@@ -44,10 +44,7 @@ class _RegistrationState extends State<Registration> {
 
         // Save additional user data in Firestore
         String userId = user.uid;
-        final docUser =
-            FirebaseFirestore.instance.collection('users').doc(userId);
-
-        final newUser = {
+        final userData = {
           "id": userId,
           "name": nameController.text.trim(),
           "email": emailController.text.trim(),
@@ -56,7 +53,26 @@ class _RegistrationState extends State<Registration> {
           "emailVerified": false,
         };
 
-        await docUser.set(newUser);
+        // Choose Firestore collection based on the selected role
+        if (selectedRole == 'Babysitter') {
+          // Save to babysitters collection
+          await FirebaseFirestore.instance
+              .collection('babysitters')
+              .doc(userId)
+              .set(userData);
+        } else if (selectedRole == 'Parent') {
+          // Save to parents collection
+          await FirebaseFirestore.instance
+              .collection('parents')
+              .doc(userId)
+              .set(userData);
+        } else {
+          // Default to a general collection if role is not specified
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(userId)
+              .set(userData);
+        }
 
         // Show dialog prompting the user to verify their email
         await showDialog(

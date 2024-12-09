@@ -1,46 +1,45 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
-class BabyChatPage extends StatefulWidget {
+class NannyChatPage extends StatefulWidget {
   final String chatId;
   final String nannyName;
-  final String userId;
   final String nannyId;
-  final String babysitterName;
+  final String userId;
 
-  const BabyChatPage({
+  const NannyChatPage({
     Key? key,
     required this.chatId,
     required this.nannyName,
-    required this.userId,
     required this.nannyId,
-    required this.babysitterName,
+    required this.userId,
+    required babysitterName,
   }) : super(key: key);
 
   @override
-  _BabyChatPageState createState() => _BabyChatPageState();
+  _NannyChatPageState createState() => _NannyChatPageState();
 }
 
-class _BabyChatPageState extends State<BabyChatPage> {
+class _NannyChatPageState extends State<NannyChatPage> {
   final TextEditingController _messageController = TextEditingController();
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final String _currentUserId = FirebaseAuth.instance.currentUser!.uid;
 
-  // Send message to Firestore
   void _sendMessage() async {
     if (_messageController.text.isNotEmpty) {
-      final String message = _messageController.text;
-
-      await FirebaseFirestore.instance
+      await _firestore
           .collection('chats')
           .doc(widget.chatId)
           .collection('messages')
           .add({
-        'senderId': widget.userId,
-        'receiverId': widget.nannyId,
-        'message': message,
+        'senderId': _currentUserId,
+        'receiverId': widget.userId, // Sending message to parentId (user2)
+        'message': _messageController.text,
         'timestamp': FieldValue.serverTimestamp(),
       });
 
-      _messageController.clear(); // Clear the message input field
+      _messageController.clear();
     }
   }
 
@@ -49,13 +48,13 @@ class _BabyChatPageState extends State<BabyChatPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Chat with ${widget.nannyName}'),
+        backgroundColor: const Color(0xFFE3838E),
       ),
       body: Column(
         children: [
-          // Chat messages list
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
-              stream: FirebaseFirestore.instance
+              stream: _firestore
                   .collection('chats')
                   .doc(widget.chatId)
                   .collection('messages')
@@ -65,34 +64,69 @@ class _BabyChatPageState extends State<BabyChatPage> {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
                 }
+
                 if (snapshot.hasError) {
-                  return Center(child: Text('Error: ${snapshot.error}'));
+                  return const Center(child: Text('Error loading messages'));
                 }
+
                 if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
                   return const Center(child: Text('No messages yet'));
                 }
 
                 final messages = snapshot.data!.docs;
+
                 return ListView.builder(
-                  reverse: true, // Show the most recent messages at the bottom
+                  reverse: true,
                   itemCount: messages.length,
                   itemBuilder: (context, index) {
-                    final messageData = messages[index];
-                    final senderId = messageData['senderId'];
-                    final message = messageData['message'];
+                    final message = messages[index];
+                    final senderId = message['senderId'];
+                    final messageText = message['message'];
+                    final timestamp = message['timestamp'];
+
+                    final isSentByCurrentUser = senderId == _currentUserId;
 
                     return ListTile(
-                      title: Text(senderId == widget.userId
-                          ? 'You: $message'
-                          : '${widget.nannyName}: $message'),
+                      title: Align(
+                        alignment: isSentByCurrentUser
+                            ? Alignment.centerRight
+                            : Alignment.centerLeft,
+                        child: Container(
+                          padding: const EdgeInsets.all(8.0),
+                          decoration: BoxDecoration(
+                            color: isSentByCurrentUser
+                                ? Colors.blue.shade100
+                                : Colors.grey.shade300,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            messageText,
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: isSentByCurrentUser
+                                  ? Colors.blue.shade900
+                                  : Colors.grey.shade800,
+                            ),
+                          ),
+                        ),
+                      ),
+                      subtitle: Align(
+                        alignment: isSentByCurrentUser
+                            ? Alignment.centerRight
+                            : Alignment.centerLeft,
+                        child: Text(
+                          timestamp != null
+                              ? timestamp.toDate().toLocal().toString()
+                              : 'Loading...',
+                          style: TextStyle(fontSize: 12),
+                        ),
+                      ),
                     );
                   },
                 );
               },
             ),
           ),
-
-          // Message input field
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: Row(
@@ -101,7 +135,7 @@ class _BabyChatPageState extends State<BabyChatPage> {
                   child: TextField(
                     controller: _messageController,
                     decoration: const InputDecoration(
-                      hintText: 'Type a message...',
+                      labelText: 'Type a message',
                       border: OutlineInputBorder(),
                     ),
                   ),

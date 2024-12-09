@@ -5,6 +5,7 @@ import 'package:babysitter/location-transactionhistorypage/transactionhistorypag
 import 'package:babysitter/login-bookingrequestpage/booking_list.dart';
 import 'package:babysitter/login-bookingrequestpage/welcome_back.dart';
 import 'package:babysitter/menu-chatpage/babysitterchat.dart';
+import 'package:babysitter/menu-chatpage/chatpage.dart';
 import 'package:babysitter/menu-chatpage/nannychatlist.dart';
 import 'package:babysitter/notifications-stylepage/notificationpage.dart';
 import 'package:babysitter/notifications-stylepage/pending_requests.dart';
@@ -17,7 +18,7 @@ import 'package:flutter/material.dart';
 class DashboardNanny extends StatelessWidget {
   final String nannyId; // Use the Firebase document ID of the nanny
   final String chatId;
-  final String babysitterName; // Babysitter's nam
+  final String babysitterName; // Babysitter's name
   final String userId; // Babysitter's ID
 
   const DashboardNanny({
@@ -164,39 +165,23 @@ class DashboardNanny extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
+            //home
             Expanded(
               child: IconButton(
                 icon: const Icon(Icons.home, size: 30),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => NannyChatPage(
-                        chatId: '',
-                        nannyName: '',
-                        userId: '',
-                        nannyId: '',
-                        babysitterName: '',
-                      ),
-                    ),
-                  );
-                },
+                onPressed: () {},
               ),
             ),
+            // ChatPage
             Expanded(
               child: IconButton(
                 icon: const Icon(Icons.chat_bubble_outline, size: 30),
                 onPressed: () {
+                  // Navigate to Nanny Chat Page
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => BabyChatPage(
-                        chatId: '',
-                        nannyName: '',
-                        userId: '',
-                        nannyId: '',
-                        babysitterName: '',
-                      ),
+                      builder: (context) => NannyChatListPage(),
                     ),
                   );
                 },
@@ -295,17 +280,8 @@ class DashboardNanny extends StatelessWidget {
                     ),
                   );
                 }),
-                _buildMenuItem(context, Icons.help_outline, 'FAQ', () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => FAQPage(),
-                    ),
-                  );
-                }),
                 _buildMenuItem(context, Icons.settings, 'Settings', () {
-                  Navigator.pop(context); // Close the dialog
+                  Navigator.pop(context);
                   Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -313,22 +289,9 @@ class DashboardNanny extends StatelessWidget {
                     ),
                   );
                 }),
-                _buildMenuItem(context, Icons.logout, 'Logout', () async {
-                  try {
-                    await FirebaseAuth.instance.signOut(); // Firebase logout
-                    Navigator.pop(context);
-                    Navigator.pushAndRemoveUntil(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => WelcomeBack(),
-                      ),
-                      (route) => false,
-                    );
-                  } catch (e) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Logout failed: $e')),
-                    );
-                  }
+                _buildMenuItem(context, Icons.logout, 'Logout', () {
+                  Navigator.pop(context);
+                  FirebaseAuth.instance.signOut();
                 }),
               ],
             ),
@@ -338,17 +301,12 @@ class DashboardNanny extends StatelessWidget {
     );
   }
 
-  // Build individual menu items
+  // Helper method to build menu items
   Widget _buildMenuItem(
       BuildContext context, IconData icon, String title, VoidCallback onTap) {
     return ListTile(
-      leading: Icon(icon),
-      title: Text(
-        title,
-        style: TextStyle(
-          fontFamily: 'Baloo', // Menu item font
-        ),
-      ),
+      leading: Icon(icon, color: Colors.black),
+      title: Text(title),
       onTap: onTap,
     );
   }
