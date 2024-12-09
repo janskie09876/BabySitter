@@ -3,15 +3,15 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
-class NannyChatListPage extends StatefulWidget {
+class ParentChatListPage extends StatefulWidget {
   @override
-  _NannyChatListPageState createState() => _NannyChatListPageState();
+  _ParentChatListPageState createState() => _ParentChatListPageState();
 }
 
-class _NannyChatListPageState extends State<NannyChatListPage> {
+class _ParentChatListPageState extends State<ParentChatListPage> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final String nannyId = FirebaseAuth
-      .instance.currentUser!.uid; // Assuming current user is the nanny
+  final String parentId = FirebaseAuth
+      .instance.currentUser!.uid; // Assuming current user is the parent
 
   @override
   Widget build(BuildContext context) {
@@ -23,8 +23,8 @@ class _NannyChatListPageState extends State<NannyChatListPage> {
       body: StreamBuilder<QuerySnapshot>(
         stream: _firestore
             .collection('chats')
-            .where('user1',
-                isEqualTo: nannyId) // Filter chats where the nanny is user1
+            .where('user2',
+                isEqualTo: parentId) // Filter chats where the parent is user2
             .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -49,12 +49,12 @@ class _NannyChatListPageState extends State<NannyChatListPage> {
             itemBuilder: (context, index) {
               var chatDoc = chatDocs[index];
               String chatId = chatDoc.id;
-              String parentId = chatDoc['user2']; // user2 is the parentId
+              String nannyId = chatDoc['user1']; // user1 is the nannyId
 
-              print("Chat ID: $chatId, Parent ID: $parentId");
+              print("Chat ID: $chatId, Nanny ID: $nannyId");
 
               return FutureBuilder<DocumentSnapshot>(
-                future: _firestore.collection('parents').doc(parentId).get(),
+                future: _firestore.collection('babysitters').doc(nannyId).get(),
                 builder: (context, userSnapshot) {
                   if (userSnapshot.connectionState == ConnectionState.waiting) {
                     return const Center(child: CircularProgressIndicator());
@@ -65,28 +65,26 @@ class _NannyChatListPageState extends State<NannyChatListPage> {
                   }
 
                   if (!userSnapshot.hasData || !userSnapshot.data!.exists) {
-                    print("No user data found for parentId: $parentId");
+                    print("No user data found for nannyId: $nannyId");
                     return const SizedBox();
                   }
 
-                  var parentName =
-                      userSnapshot.data!['name'] ?? 'Unknown Parent';
+                  var nannyName = userSnapshot.data!['name'] ?? 'Unknown Nanny';
 
-                  print("Parent Name: $parentName");
+                  print("Nanny Name: $nannyName");
 
                   return ListTile(
-                    title: Text(parentName),
+                    title: Text(nannyName),
                     onTap: () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (context) => BabysitterChatPage(
                             chatId: chatId,
-                            nannyName:
-                                parentName, // You can retrieve dynamically if needed
-                            userId: nannyId,
+                            nannyName: nannyName,
+                            userId: parentId,
                             nannyId: nannyId,
-                            babysitterName: parentName,
+                            babysitterName: nannyName,
                           ),
                         ),
                       );

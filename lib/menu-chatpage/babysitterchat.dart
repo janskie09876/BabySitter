@@ -50,7 +50,7 @@ class _BabysitterChatPageState extends State<BabysitterChatPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Chat with ${widget.babysitterName}'),
+        title: Text('Chat with ${widget.nannyName}'),
         backgroundColor: const Color(0xFFE3838E),
       ),
       body: Column(

@@ -5,6 +5,7 @@ import 'package:babysitter/home-paymentpage/nannylist.dart';
 import 'package:babysitter/location-transactionhistorypage/transactionhistorypage.dart';
 import 'package:babysitter/login-bookingrequestpage/welcome_back.dart';
 import 'package:babysitter/menu-chatpage/chat_page.dart';
+import 'package:babysitter/menu-chatpage/chatpage1.dart';
 import 'package:babysitter/notifications-stylepage/notificationpage.dart';
 import 'package:babysitter/notifications-stylepage/styles.dart';
 import 'package:babysitter/pages/viewmap1.dart';
@@ -271,7 +272,7 @@ class _DashboardState extends State<Dashboard> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => ChatPage1(),
+                        builder: (context) => ParentChatListPage(),
                       ),
                     );
                   },
