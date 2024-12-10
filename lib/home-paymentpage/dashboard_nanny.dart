@@ -1,5 +1,6 @@
 import 'package:babysitter/account-ratingandreviewpage-terms/accountpage.dart';
 import 'package:babysitter/account-ratingandreviewpage-terms/editbabysitterprofile.dart';
+import 'package:babysitter/account-ratingandreviewpage-terms/editparentprofile.dart';
 import 'package:babysitter/availability-helpandsupport/FAQ.dart';
 import 'package:babysitter/location-transactionhistorypage/transactionhistorypage.dart';
 import 'package:babysitter/login-bookingrequestpage/booking_list.dart';
@@ -36,7 +37,7 @@ class DashboardNanny extends StatelessWidget {
       if (user != null) {
         // Query Firestore for the user's document using the UID
         DocumentSnapshot userDoc = await FirebaseFirestore.instance
-            .collection('users')
+            .collection('babysitters')
             .doc(user.uid) // Match document ID with the UID
             .get();
 
@@ -208,7 +209,7 @@ class DashboardNanny extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => EditProfilePage(),
+                      builder: (context) => EditBabysitterProfilePage(),
                     ),
                   );
                 },

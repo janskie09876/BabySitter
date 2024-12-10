@@ -167,7 +167,7 @@ class _EditParentProfilePageState extends State<EditParentProfilePage> {
         };
 
         final userDoc =
-            FirebaseFirestore.instance.collection('users').doc(user.uid);
+            FirebaseFirestore.instance.collection('parents').doc(user.uid);
         await userDoc.update(updatedData);
 
         ScaffoldMessenger.of(context).showSnackBar(

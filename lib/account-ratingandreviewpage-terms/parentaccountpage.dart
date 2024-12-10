@@ -15,7 +15,7 @@ class Parentaccountpage extends StatelessWidget {
       if (user != null) {
         // Query Firestore for the user's document using the UID
         DocumentSnapshot userDoc = await FirebaseFirestore.instance
-            .collection('users')
+            .collection('parents')
             .doc(user.uid) // Match document ID with the UID
             .get();
 

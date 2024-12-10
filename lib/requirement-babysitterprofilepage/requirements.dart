@@ -1,7 +1,11 @@
 import 'dart:typed_data';
 
 import 'package:babysitter/notifications-stylepage/styles.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 
@@ -45,6 +49,8 @@ class _RequirementsPageState extends State<RequirementsPage> {
 
   String dropdownValue = idOptions.first;
   String radioButtonValue = genderOptions.first;
+  String? latitude;
+  String? longitude;
 
   // For selecting image using the Gallery for profile pic
   void selectImageFromGallery(bool isForProfile) async {
@@ -219,6 +225,94 @@ class _RequirementsPageState extends State<RequirementsPage> {
     }
   }
 
+  Future<void> updateUserProfile() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        Map<String, dynamic> updatedData = {
+          'name': nameController.text,
+          'phoneNumber': phoneNumberController.text,
+          'location': locationController.text,
+          'gender': radioButtonValue,
+          'birthdate': _dateController.text,
+          'bio': bioController,
+          'workexperience': workExperienceController,
+          'profileImage': _profileimage != null
+              ? await uploadImageToStorage(
+                  _profileimage!) // upload image if selected
+              : null,
+          'latitude': latitude,
+          'longitude': longitude,
+        };
+
+        final userDoc =
+            FirebaseFirestore.instance.collection('babysitters').doc(user.uid);
+        await userDoc.update(updatedData);
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Profile updated successfully')),
+        );
+      }
+    } catch (e) {
+      print('Error updating profile: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error updating profile')),
+      );
+    }
+  }
+
+  Future<String?> uploadImageToStorage(Uint8List image) async {
+    try {
+      String fileName = DateTime.now().millisecondsSinceEpoch.toString();
+      final storageRef =
+          FirebaseStorage.instance.ref().child('profile_images/$fileName');
+      UploadTask uploadTask = storageRef.putData(image);
+      TaskSnapshot snapshot = await uploadTask;
+      String downloadUrl = await snapshot.ref.getDownloadURL();
+      return downloadUrl;
+    } catch (e) {
+      print('Error uploading image: $e');
+      return null;
+    }
+  }
+
+  // Method to get the current location
+  Future<void> getLocation() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    // Check if location services are enabled
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Location services are disabled.')),
+      );
+      return;
+    }
+
+    // Check if location permission is granted
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Location permission denied')),
+        );
+        return;
+      }
+    }
+
+    // Get current location
+    Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high);
+    setState(() {
+      latitude = position.latitude.toString();
+      longitude = position.longitude.toString();
+      locationController.text =
+          'Lat: $latitude, Long: $longitude'; // Update text field
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -348,41 +442,7 @@ class _RequirementsPageState extends State<RequirementsPage> {
                         ),
                       ),
                       const SizedBox(height: 15),
-                      // Email
-                      Container(
-                        decoration: BoxDecoration(
-                          color: AppStyles.backgroundColor,
-                          borderRadius: BorderRadius.circular(9),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.grey.withOpacity(0.5),
-                              spreadRadius: 0,
-                              blurRadius: 7,
-                              offset: Offset(0, 5),
-                            ),
-                          ],
-                        ),
-                        child: TextFormField(
-                          controller: nameController,
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please enter email address!';
-                            }
-                            return null;
-                          },
-                          decoration: InputDecoration(
-                            labelText: 'Enter Email',
-                            labelStyle: TextStyle(
-                                color: AppStyles.textColor,
-                                fontFamily: 'Balsamiq Sans'),
-                            contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 15, vertical: 10),
-                            border: UnderlineInputBorder(
-                                borderSide: BorderSide.none),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 15),
+
                       // Phone Number
                       Container(
                         decoration: BoxDecoration(
@@ -398,7 +458,7 @@ class _RequirementsPageState extends State<RequirementsPage> {
                           ],
                         ),
                         child: TextFormField(
-                          controller: nameController,
+                          controller: phoneNumberController,
                           validator: (value) {
                             if (value == null || value.isEmpty) {
                               return 'Please enter phone number!';
@@ -557,6 +617,11 @@ class _RequirementsPageState extends State<RequirementsPage> {
                         ),
                       ),
                       const SizedBox(height: 15),
+                      IconButton(
+                        onPressed: getLocation,
+                        icon: Icon(Icons.location_on),
+                        color: Colors.blue,
+                      ),
                       // Biography
                       Container(
                         decoration: BoxDecoration(
@@ -750,11 +815,7 @@ class _RequirementsPageState extends State<RequirementsPage> {
                           ),
                           onPressed: () {
                             if (_formKey.currentState!.validate()) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('You entered'),
-                                ),
-                              );
+                              updateUserProfile();
                             }
                           },
                           child: const Text(
