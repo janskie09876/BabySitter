@@ -79,12 +79,8 @@ class _WelcomeBackState extends State<WelcomeBack> {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-                builder: (context) => DashboardNanny(
-                      chatId: '',
-                      babysitterName: '',
-                      nannyId: '',
-                      userId: '',
-                    )), // Replace with actual Babysitter Dashboard
+              builder: (context) => DashboardNanny(),
+            ), // Replace with actual Babysitter Dashboard
           );
         } else {
           // Handle unexpected role

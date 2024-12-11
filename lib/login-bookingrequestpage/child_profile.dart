@@ -29,7 +29,6 @@ class _ChildrenInputState extends State<ChildrenInput> {
               context,
               MaterialPageRoute(
                   builder: (context) => BookNow(
-                        nanny: nanny,
                         nannyId: '',
                       )),
             );

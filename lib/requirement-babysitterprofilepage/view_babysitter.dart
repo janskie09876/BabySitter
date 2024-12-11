@@ -240,9 +240,8 @@ class _ViewBabysitterState extends State<ViewBabysitter> {
                       context,
                       MaterialPageRoute(
                         builder: (context) => BookNow(
-                          nanny: widget.nanny,
-                          nannyId: '',
-                        ), // This will work now because it's the same Nanny class
+                          nannyId: widget.nanny!.id, // Pass the actual nannyId
+                        ),
                       ),
                     );
                   },

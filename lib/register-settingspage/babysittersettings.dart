@@ -62,12 +62,8 @@ class _Settings6DelaCernaState extends State<Settings6DelaCerna> {
                             Navigator.pushReplacement(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => DashboardNanny(
-                                  nannyId: '',
-                                  chatId: '',
-                                  babysitterName: '',
-                                  userId: '',
-                                ), // babysitter Dashboard page
+                                builder: (context) =>
+                                    DashboardNanny(), // babysitter Dashboard page
                               ),
                             );
                           },
