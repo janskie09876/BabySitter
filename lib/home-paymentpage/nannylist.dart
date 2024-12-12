@@ -8,7 +8,7 @@ class Nanny {
   final String name;
   final double rating;
   final String availability;
-  final String? birthDate;
+  final String? birthdate;
   final int age;
   final String location;
   final String? phoneNumber;
@@ -20,7 +20,7 @@ class Nanny {
     required this.name,
     required this.rating,
     required this.availability,
-    this.birthDate,
+    this.birthdate,
     required this.age,
     required this.location,
     this.phoneNumber,
@@ -34,7 +34,7 @@ class Nanny {
       name: data['name'] ?? 'Unknown',
       rating: (data['rating'] ?? 0).toDouble(),
       availability: data['availability'] ?? 'Unavailable',
-      birthDate: data['birthDate'],
+      birthdate: data['birthdate'],
       age: data['age'] ?? 0,
       location: data['location'] ?? 'Unknown',
       phoneNumber: data['phone'],

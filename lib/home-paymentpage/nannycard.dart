@@ -1,11 +1,35 @@
 import 'package:babysitter/home-paymentpage/nannylist.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 class NannyCard extends StatelessWidget {
   final Nanny nanny;
   final VoidCallback onTap;
 
   const NannyCard({required this.nanny, required this.onTap});
+
+  int _calculateAge(DateTime birthDate) {
+    final currentDate = DateTime.now();
+    int age = currentDate.year - birthDate.year;
+
+    if (currentDate.month < birthDate.month ||
+        (currentDate.month == birthDate.month &&
+            currentDate.day < birthDate.day)) {
+      age--;
+    }
+    return age;
+  }
+
+  DateTime _parseBirthDate(String birthDate) {
+    try {
+      // Parse with the expected format "MMMM dd, yyyy"
+      final dateFormat = DateFormat('MMMM dd, yyyy');
+      return dateFormat.parse(birthDate);
+    } catch (e) {
+      print('Error parsing birthDate: $e');
+      return DateTime(1900, 1, 1); // Default fallback date
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -114,7 +138,7 @@ class NannyCard extends StatelessWidget {
                             const SizedBox(width: 4),
                             Flexible(
                               child: Text(
-                                nanny.birthDate ?? 'Not Available',
+                                nanny.birthdate ?? 'Not Available',
                                 overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(
                                   fontSize: 14,
@@ -186,7 +210,10 @@ class NannyCard extends StatelessWidget {
                             ),
                           ),
                           Text(
-                            '${nanny.age}',
+                            nanny.birthdate != null &&
+                                    nanny.birthdate!.isNotEmpty
+                                ? '${_calculateAge(_parseBirthDate(nanny.birthdate!))}' // Parse and calculate age
+                                : 'Unknown', // Handle null or empty birthDate
                             style: const TextStyle(fontFamily: 'Baloo'),
                           ),
                         ],
