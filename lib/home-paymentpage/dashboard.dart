@@ -6,6 +6,7 @@ import 'package:babysitter/location-transactionhistorypage/transactionhistorypag
 import 'package:babysitter/login-bookingrequestpage/welcome_back.dart';
 import 'package:babysitter/menu-chatpage/chat_page.dart';
 import 'package:babysitter/menu-chatpage/chatpage1.dart';
+import 'package:babysitter/notifications-stylepage/notif.dart';
 import 'package:babysitter/notifications-stylepage/notificationpage.dart';
 import 'package:babysitter/notifications-stylepage/styles.dart';
 import 'package:babysitter/pages/viewmap1.dart';
@@ -280,14 +281,63 @@ class _DashboardState extends State<Dashboard> {
               ),
               const Expanded(child: SizedBox()),
               Expanded(
-                child: IconButton(
-                  icon: const Icon(Icons.notifications_none, size: 30),
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => NotificationPage(),
-                      ),
+                child: StreamBuilder<QuerySnapshot>(
+                  stream: FirebaseFirestore.instance
+                      .collection('notifications')
+                      .where('parentId',
+                          isEqualTo: FirebaseAuth.instance.currentUser
+                              ?.uid) // Filter by current user's ID
+                      .where('read',
+                          isEqualTo: false) // Only unread notifications
+                      .snapshots(),
+                  builder: (context, snapshot) {
+                    int unreadCount = 0;
+
+                    if (snapshot.hasData && snapshot.data != null) {
+                      unreadCount = snapshot.data!.docs.length;
+                    }
+
+                    return Stack(
+                      clipBehavior:
+                          Clip.none, // Allows the badge to overflow the bounds
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.notifications_none, size: 30),
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => ParentNotifications(
+                                  parentId:
+                                      FirebaseAuth.instance.currentUser?.uid ??
+                                          '',
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                        if (unreadCount >
+                            0) // Show badge only if there are unread notifications
+                          Positioned(
+                            right: 55, // Adjusted position for proper alignment
+                            top: 4, // Adjusted position for proper alignment
+                            child: Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                color: Colors.red,
+                                shape: BoxShape.circle,
+                              ),
+                              child: Text(
+                                '$unreadCount',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
                     );
                   },
                 ),
