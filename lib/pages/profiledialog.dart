@@ -15,7 +15,7 @@ class ProfileDialog extends StatelessWidget {
           const CircleAvatar(
             radius: 40,
             backgroundImage: AssetImage(
-                'assets/bless.jpg'), // Replace with your local asset path
+                'assets/images/bless.jpg'), // Replace with your local asset path
           ),
           const SizedBox(height: 10),
           const Text(
