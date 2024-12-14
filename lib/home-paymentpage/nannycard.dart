@@ -1,6 +1,6 @@
-import 'package:babysitter/home-paymentpage/nannylist.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:babysitter/home-paymentpage/nannylist.dart';
 
 class NannyCard extends StatelessWidget {
   final Nanny nanny;
@@ -105,13 +105,22 @@ class NannyCard extends StatelessWidget {
                             5,
                             (index) => Icon(
                               Icons.star,
-                              color: index < nanny.rating.toInt()
+                              color: index < nanny.rating.floor()
                                   ? Colors.amber
                                   : Colors.grey.shade400,
                               size: 20,
                             ),
                           ),
                         ),
+                        if (nanny.ratingCount > 0)
+                          Text(
+                            '${nanny.ratingCount} reviews',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey.shade600,
+                              fontFamily: 'Baloo',
+                            ),
+                          ),
                       ],
                     ),
                   ),
@@ -159,7 +168,7 @@ class NannyCard extends StatelessWidget {
                             const SizedBox(width: 4),
                             Flexible(
                               child: Text(
-                                nanny.location,
+                                nanny.address,
                                 overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(
                                   fontSize: 14,
@@ -219,9 +228,14 @@ class NannyCard extends StatelessWidget {
                         ],
                       ),
                       const SizedBox(height: 8),
-                      const Text(
-                        'Gender: Female', // Static gender value, change as needed
-                        style: TextStyle(fontFamily: 'Baloo'),
+                      Text(
+                        nanny.gender, // Static gender value, change as needed
+                        style: const TextStyle(fontFamily: 'Baloo'),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        '${nanny.service} per hour', // Added "per hour" text after nanny service
+                        style: const TextStyle(fontFamily: 'Baloo'),
                       ),
                     ],
                   ),

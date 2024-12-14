@@ -1,20 +1,117 @@
 import 'package:babysitter/home-paymentpage/cashpay_page.dart';
-import 'package:babysitter/home-paymentpage/gpay_page.dart';
 import 'package:babysitter/notifications-stylepage/styles.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 class PaymentDetailsPage extends StatefulWidget {
+  final String bookingId; // Added bookingId
+
+  const PaymentDetailsPage({Key? key, required this.bookingId})
+      : super(key: key);
+
   @override
   State<PaymentDetailsPage> createState() => _PaymentDetailsPageState();
 }
 
 class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
   String selectedPaymentMethod = "Payment";
+  double subtotal = 0.0;
+  double total = 0.0;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchPaymentDetails();
+  }
+
+  // Safely parse 24-hour time strings into TimeOfDay objects
+  TimeOfDay safeParseTime(String timeString) {
+    try {
+      final DateTime parsedTime =
+          DateFormat('HH:mm').parse(timeString); // Parse 24-hour format
+      return TimeOfDay(hour: parsedTime.hour, minute: parsedTime.minute);
+    } catch (e) {
+      print('Error parsing time: $e');
+      throw FormatException("Invalid time format: $timeString");
+    }
+  }
+
+  // Calculate the total babysitting hours
+  double calculateHours(TimeOfDay start, TimeOfDay end) {
+    final startMinutes = start.hour * 60 + start.minute;
+    final endMinutes = end.hour * 60 + end.minute;
+
+    // Handle overnight shifts (e.g., start 22:00, end 02:00)
+    final totalMinutes = endMinutes >= startMinutes
+        ? endMinutes - startMinutes
+        : (1440 - startMinutes) + endMinutes;
+
+    return totalMinutes / 60.0;
+  }
+
+  Future<void> fetchPaymentDetails() async {
+    try {
+      final bookingDoc = await FirebaseFirestore.instance
+          .collection('bookings')
+          .doc(widget.bookingId)
+          .get();
+
+      if (!bookingDoc.exists) {
+        throw Exception('Booking not found.');
+      }
+
+      final bookingData = bookingDoc.data();
+
+      final subBookingSnapshot = await FirebaseFirestore.instance
+          .collection('bookings')
+          .doc(widget.bookingId)
+          .collection('booking')
+          .limit(1)
+          .get();
+
+      if (subBookingSnapshot.docs.isEmpty) {
+        throw Exception('Sub-booking not found.');
+      }
+
+      final subBookingData = subBookingSnapshot.docs.first.data();
+
+      // Fetch start and end times in 24-hour format
+      final String startTimeString = subBookingData['startTime'];
+      final String endTimeString = subBookingData['endTime'];
+
+      // Parse times into TimeOfDay objects
+      final startTime = safeParseTime(startTimeString);
+      final endTime = safeParseTime(endTimeString);
+
+      // Calculate babysitting hours
+      final totalHours = calculateHours(startTime, endTime);
+
+      // Fetch babysitter's service fee
+      final babysitterDoc = await FirebaseFirestore.instance
+          .collection('babysitters')
+          .doc(bookingData?['user2'])
+          .get();
+
+      if (!babysitterDoc.exists) {
+        throw Exception('Babysitter not found.');
+      }
+
+      final babysitterData = babysitterDoc.data();
+      final serviceFee =
+          double.tryParse(babysitterData?['service'] ?? '0') ?? 0;
+
+      setState(() {
+        subtotal = totalHours * serviceFee;
+        total = subtotal; // Adjust as needed
+      });
+    } catch (e) {
+      print('Error fetching payment details: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-
     return Scaffold(
       appBar: AppBar(
         title: const Text(
@@ -47,18 +144,7 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
               ),
             ),
             const SizedBox(height: 30),
-            // Payment Method Cards
-            buildPaymentMethodCard(
-              label: "Google Pay",
-              iconPath: "assets/images/gpaylogo.png",
-              isSelected: selectedPaymentMethod == "Google Pay",
-              onTap: () {
-                setState(() {
-                  selectedPaymentMethod = "Google Pay";
-                });
-              },
-            ),
-            const SizedBox(height: 20),
+            // Cash Payment Method Card
             buildPaymentMethodCard(
               label: "Cash on Hand",
               iconPath: "assets/images/cashkwarta.jpg",
@@ -74,8 +160,8 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
             // Subtotal and Total
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: const [
-                Text(
+              children: [
+                const Text(
                   "Subtotal:",
                   style: TextStyle(
                     fontFamily: 'Baloo', // Apply Baloo font
@@ -83,8 +169,8 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
                   ),
                 ),
                 Text(
-                  "\$450",
-                  style: TextStyle(
+                  "\₱${subtotal.toStringAsFixed(2)}",
+                  style: const TextStyle(
                     fontFamily: 'Baloo', // Apply Baloo font
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -95,8 +181,8 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
             const SizedBox(height: 8),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: const [
-                Text(
+              children: [
+                const Text(
                   "Total:",
                   style: TextStyle(
                     fontFamily: 'Baloo', // Apply Baloo font
@@ -104,8 +190,8 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
                   ),
                 ),
                 Text(
-                  "\$450",
-                  style: TextStyle(
+                  "\₱${total.toStringAsFixed(2)}",
+                  style: const TextStyle(
                     fontFamily: 'Baloo', // Apply Baloo font
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -117,28 +203,27 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
             // Pay Now Button
             ElevatedButton(
               onPressed: () {
-                if (selectedPaymentMethod == "Google Pay") {
-                  // Navigate to GPayPage
+                if (selectedPaymentMethod == "Cash on Hand") {
+                  // Navigate to CashPayPage
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => GPayPage()),
-                  );
-                } else if (selectedPaymentMethod == "Cash on Hand") {
-                  // Navigate to CashPayPage or show relevant action for Cash on Hand
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => CashPayPage()),
+                    MaterialPageRoute(
+                      builder: (context) => CashPayPage(
+                        bookingId:
+                            widget.bookingId, // Pass bookingId to CashPayPage
+                      ),
+                    ),
                   );
                 } else {
-                  // Handle other payment methods if needed
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                        content: Text('Please select a valid payment method.')),
+                    const SnackBar(
+                      content: Text('Please select "Cash on Hand" to proceed.'),
+                    ),
                   );
                 }
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xFFE3838E),
+                backgroundColor: const Color(0xFFE3838E),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
@@ -197,7 +282,7 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
             Expanded(
               child: Text(
                 label,
-                style: TextStyle(
+                style: const TextStyle(
                   fontFamily: 'Baloo', // Apply Baloo font
                   fontSize: 16,
                 ),

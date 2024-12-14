@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
@@ -32,6 +33,8 @@ class _EditBabysitterProfilePageState extends State<EditBabysitterProfilePage> {
   final TextEditingController bioController = TextEditingController();
   final TextEditingController workController = TextEditingController();
   final TextEditingController locationController = TextEditingController();
+  final TextEditingController addressController = TextEditingController();
+  final TextEditingController serviceController = TextEditingController();
 
   String radioButtonValue = genderOptions.first;
   String? latitude;
@@ -169,6 +172,8 @@ class _EditBabysitterProfilePageState extends State<EditBabysitterProfilePage> {
               : null,
           'latitude': latitude,
           'longitude': longitude,
+          'address': addressController.text,
+          'service': serviceController.text
         };
 
         final userDoc =
@@ -320,6 +325,23 @@ class _EditBabysitterProfilePageState extends State<EditBabysitterProfilePage> {
                       labelText: 'Full Name',
                       border: OutlineInputBorder(),
                     ),
+                    //Per Hour
+                  ),
+                  const SizedBox(height: 20),
+                  TextFormField(
+                    controller: serviceController,
+                    validator: (value) =>
+                        value!.isEmpty ? 'Please enter your service fee' : null,
+                    decoration: const InputDecoration(
+                      labelText: 'Service Fee',
+                      border: OutlineInputBorder(),
+                    ),
+                    keyboardType:
+                        TextInputType.number, // Set the keyboard type to number
+                    inputFormatters: [
+                      FilteringTextInputFormatter
+                          .digitsOnly, // Allow only digits
+                    ],
                   ),
                   const SizedBox(height: 20),
                   // Phone Number TextField
@@ -331,6 +353,19 @@ class _EditBabysitterProfilePageState extends State<EditBabysitterProfilePage> {
                     keyboardType: TextInputType.phone,
                     decoration: const InputDecoration(
                       labelText: 'Phone Number',
+                      border: OutlineInputBorder(),
+                    ),
+                    // Address
+                  ),
+                  const SizedBox(height: 20),
+                  TextFormField(
+                    controller: addressController,
+                    validator: (value) => value!.isEmpty
+                        ? 'Please enter your Complete Address'
+                        : null,
+                    keyboardType: TextInputType.phone,
+                    decoration: const InputDecoration(
+                      labelText: 'Address',
                       border: OutlineInputBorder(),
                     ),
                   ),

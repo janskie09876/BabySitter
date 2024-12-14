@@ -1,3 +1,4 @@
+import 'package:babysitter/account-ratingandreviewpage-terms/reviewratings.dart';
 import 'package:babysitter/home-paymentpage/nannylist.dart';
 import 'package:babysitter/login-bookingrequestpage/book_now.dart';
 import 'package:babysitter/menu-chatpage/babysitterchat.dart';
@@ -149,7 +150,7 @@ class _ViewBabysitterState extends State<ViewBabysitter> {
             Text('Date of Birth: ${widget.nanny?.birthdate}',
                 style: const TextStyle(fontFamily: 'Baloo', fontSize: 16)),
             const SizedBox(height: 8),
-            Text('Location: ${widget.nanny?.location}',
+            Text('Address: ${widget.nanny?.address}',
                 style: const TextStyle(fontFamily: 'Baloo', fontSize: 16)),
             const SizedBox(height: 8),
             Text('Phone Number: ${widget.nanny?.phoneNumber}',
@@ -283,6 +284,24 @@ class _ViewBabysitterState extends State<ViewBabysitter> {
                   ),
                 ),
               ],
+            ),
+            const SizedBox(width: 16),
+            ElevatedButton(
+              onPressed: () {
+                // Navigate to BookNow and pass the nanny data
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ReviewPage(
+                      nannyName: '',
+                    ),
+                  ),
+                );
+              },
+              child: const Text('Babysitter Ratings & Reviews'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFE3838E),
+              ),
             ),
           ],
         ),

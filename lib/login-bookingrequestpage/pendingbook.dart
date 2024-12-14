@@ -89,8 +89,9 @@ class PendingBookingsList extends StatelessWidget {
             children: [
               Text('Name: ${bookingDetails['name'] ?? 'Unknown'}'),
               Text('Phone: ${bookingDetails['phone'] ?? 'Unknown'}'),
+              Text('Start at: ${bookingDetails['startTime'] ?? 'Unknown'}'),
+              Text('End at: ${bookingDetails['endTime'] ?? 'Unknown'}'),
               Text('Date: ${bookingDetails['date'] ?? 'Unknown'}'),
-              Text('Time: ${bookingDetails['time'] ?? 'Unknown'}'),
             ],
           ),
           actions: [
