@@ -15,6 +15,7 @@ import 'package:babysitter/register-settingspage/settings.dart'
 import 'package:cloud_firestore/cloud_firestore.dart'; // Import Firestore
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:babysitter/pages/viewmap1.dart'; // Correct import
 
 class Dashboard extends StatefulWidget {
   @override
@@ -237,10 +238,20 @@ class _DashboardState extends State<Dashboard> {
           child: IconButton(
             icon: const Icon(Icons.public, color: AppStyles.whiteColor),
             onPressed: () {
+              // You can pass a default address or fetch it dynamically
+              String address =
+                  "Current Location"; // Or get this dynamically based on your app's state
+              double latitude = 0.0; // Set the correct latitude
+              double longitude = 0.0; // Set the correct longitude
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => const ViewMap1(),
+                  builder: (context) => ViewMap1(
+                    isSelectingLocation: true,
+                    address: address,
+                    latitude: latitude,
+                    longitude: longitude,
+                  ),
                 ),
               );
             },
