@@ -96,9 +96,9 @@ class NannyCard extends StatelessWidget {
                             5,
                             (index) => Icon(
                               Icons.star,
-                              color: index < nanny.rating.toInt()
-                                  ? AppColors.primaryColor
-                                  : AppColors.grayColor,
+                              color: index < nanny.rating.floor()
+                                  ? Colors.amber
+                                  : Colors.grey.shade400,
                               size: 20,
                             ),
                           ),
