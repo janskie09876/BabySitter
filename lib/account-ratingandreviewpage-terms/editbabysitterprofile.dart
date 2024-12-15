@@ -1,21 +1,29 @@
-import 'package:flutter/material.dart';
+import 'dart:typed_data';
+
+import 'package:babysitter/requirement-babysitterprofilepage/resources/utils.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
-import 'dart:io';
-import 'package:geocoding/geocoding.dart';
-import 'package:babysitter/pages/viewmap1.dart';
+import 'package:intl/intl.dart';
+
+final List<String> genderOptions = <String>[
+  'Male',
+  'Female',
+];
 
 class EditBabysitterProfilePage extends StatefulWidget {
+  const EditBabysitterProfilePage({super.key});
   @override
-  _EditBabysitterProfilePageState createState() =>
+  State<EditBabysitterProfilePage> createState() =>
       _EditBabysitterProfilePageState();
 }
 
 class _EditBabysitterProfilePageState extends State<EditBabysitterProfilePage> {
+  Uint8List? _profileimage;
   final _formKey = GlobalKey<FormState>();
 
   // Text Controllers
@@ -25,25 +33,127 @@ class _EditBabysitterProfilePageState extends State<EditBabysitterProfilePage> {
   final TextEditingController bioController = TextEditingController();
   final TextEditingController workController = TextEditingController();
   final TextEditingController locationController = TextEditingController();
+  final TextEditingController addressController = TextEditingController();
+  final TextEditingController serviceController = TextEditingController();
 
-  String? radioButtonValue;
-  String? selectedCity;
-  final List<String> cities = ['Panabo City', 'Tagum City', 'Davao City'];
+  String radioButtonValue = genderOptions.first;
+  String? latitude;
+  String? longitude;
 
-  XFile? _profileimage;
-  final ImagePicker _picker = ImagePicker();
-
-  double? latitude;
-  double? longitude;
-  String? address;
-
-  Future<void> pickImage() async {
-    final image = await _picker.pickImage(source: ImageSource.gallery);
+  // For selecting image using the Gallery for profile pic
+  void selectImageFromGallery(bool isForProfile) async {
+    Uint8List img = await pickImage(ImageSource.gallery);
     setState(() {
-      _profileimage = image;
+      if (isForProfile) {
+        _profileimage = img;
+      }
     });
+    Navigator.of(context).pop();
   }
 
+  // For selecting image using the Camera for profile pic
+  void selectImageFromCamera(bool isForProfile) async {
+    Uint8List img = await pickImage(ImageSource.camera);
+    setState(() {
+      if (isForProfile) {
+        _profileimage = img;
+      }
+    });
+    Navigator.of(context).pop();
+  }
+
+  // Option sa pagkuha ug picture kung gallery ba or camera para sa profile
+  void showImagePickerOptionforProfile(BuildContext context) {
+    showModalBottomSheet(
+      backgroundColor: Colors.white, // Adjust as needed
+      context: context,
+      builder: (builder) {
+        return Padding(
+          padding: const EdgeInsets.all(18.0),
+          child: SizedBox(
+            width: MediaQuery.of(context).size.width,
+            height: MediaQuery.of(context).size.height / 6.5,
+            child: Row(
+              children: [
+                Expanded(
+                  child: InkWell(
+                    onTap: () => selectImageFromGallery(true),
+                    child: const SizedBox(
+                      child: Column(
+                        children: [
+                          Icon(
+                            Icons.image,
+                            size: 70,
+                          ),
+                          Text(
+                            'Gallery',
+                            style: TextStyle(fontSize: 20),
+                          )
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: InkWell(
+                    onTap: () => selectImageFromCamera(true),
+                    child: const SizedBox(
+                      child: Column(
+                        children: [
+                          Icon(
+                            Icons.camera_alt,
+                            size: 70,
+                          ),
+                          Text(
+                            'Camera',
+                            style: TextStyle(fontSize: 20),
+                          )
+                        ],
+                      ),
+                    ),
+                  ),
+                )
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  // Date Picker
+  Future<void> _selectDate(BuildContext context) async {
+    DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2101),
+    );
+    if (pickedDate != null) {
+      String formattedDate = DateFormat('MMMM dd, yyyy').format(pickedDate);
+      setState(() {
+        _dateController.text = formattedDate;
+      });
+    }
+  }
+
+  // Method to upload the image to Firebase Storage
+  Future<String?> uploadImageToStorage(Uint8List image) async {
+    try {
+      String fileName = DateTime.now().millisecondsSinceEpoch.toString();
+      final storageRef =
+          FirebaseStorage.instance.ref().child('profile_images/$fileName');
+      UploadTask uploadTask = storageRef.putData(image);
+      TaskSnapshot snapshot = await uploadTask;
+      String downloadUrl = await snapshot.ref.getDownloadURL();
+      return downloadUrl;
+    } catch (e) {
+      print('Error uploading image: $e');
+      return null;
+    }
+  }
+
+  // Method to update user profile in Firestore
   Future<void> updateUserProfile() async {
     try {
       final user = FirebaseAuth.instance.currentUser;
@@ -62,114 +172,200 @@ class _EditBabysitterProfilePageState extends State<EditBabysitterProfilePage> {
               : null,
           'latitude': latitude,
           'longitude': longitude,
+          'address': addressController.text,
+          'service': serviceController.text
         };
 
-          final userDoc = FirebaseFirestore.instance
-              .collection('babysitters')
-              .doc(user.uid);
-          await userDoc.update(updatedData);
+        final userDoc =
+            FirebaseFirestore.instance.collection('babysitters').doc(user.uid);
+        await userDoc.update(updatedData);
 
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Profile updated successfully')),
-          );
-        }
-      } catch (e) {
-        print('Error updating profile: $e');
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Error updating profile')),
+          SnackBar(content: Text('Profile updated successfully')),
         );
       }
+    } catch (e) {
+      print('Error updating profile: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error updating profile')),
+      );
     }
   }
 
-  Future<void> getCoordinatesFromAddress(String address) async {
-    try {
-      List<Location> locations = await locationFromAddress(address);
-      setState(() {
-        latitude = locations[0].latitude;
-        longitude = locations[0].longitude;
-        addressController.text = address;
-      });
-    } catch (e) {
-      print('Error: $e');
+  // Method to get the current location
+  Future<void> getLocation() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    // Check if location services are enabled
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Invalid address')),
+        SnackBar(content: Text('Location services are disabled.')),
       );
+      return;
     }
+
+    // Check if location permission is granted
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Location permission denied')),
+        );
+        return;
+      }
+    }
+
+    // Get current location
+    Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high);
+    setState(() {
+      latitude = position.latitude.toString();
+      longitude = position.longitude.toString();
+      locationController.text =
+          'Lat: $latitude, Long: $longitude'; // Update text field
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      key: _scaffoldKey,
-      appBar: AppBar(
-        title: const Text('Update Profile'),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              GestureDetector(
-                onTap: pickImage,
-                child: CircleAvatar(
-                  radius: 50,
-                  backgroundImage: _profileimage != null
-                      ? FileImage(File(_profileimage!.path))
-                      : null,
-                  child: _profileimage == null
-                      ? const Icon(Icons.camera_alt, size: 40)
-                      : null,
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Full Name',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) =>
-                    value == null || value.isEmpty ? 'Enter your name' : null,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: phoneNumberController,
-                decoration: const InputDecoration(
-                  labelText: 'Phone Number',
-                  border: OutlineInputBorder(),
-                ),
-                keyboardType: TextInputType.phone,
-                validator: (value) => value == null || value.isEmpty
-                    ? 'Enter your phone number'
-                    : null,
-              ),
-              const SizedBox(height: 16),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Address',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
+      body: Form(
+        key: _formKey,
+        child: ListView(
+          children: [
+            SizedBox(height: 15),
+            // Close Button
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                IconButton(
+                  onPressed: () {},
+                  icon: CircleAvatar(
+                    backgroundColor: Colors.blue,
+                    radius: 25,
+                    child: Icon(
+                      Icons.close_rounded,
+                      color: Colors.white,
+                      size: 30,
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  DropdownButtonFormField<String>(
+                ),
+              ],
+            ),
+            SizedBox(height: 10),
+            // Heading
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  'Update Profile',
+                  style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
+                )
+              ],
+            ),
+            SizedBox(height: 10),
+            // Content
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 20),
+              decoration: BoxDecoration(
+                color: Colors.blue[50],
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(45),
+                  topRight: Radius.circular(45),
+                ),
+              ),
+              child: Column(
+                children: [
+                  const SizedBox(height: 10),
+                  // Profile Picture
+                  Stack(
+                    children: [
+                      _profileimage != null
+                          ? CircleAvatar(
+                              radius: 50,
+                              backgroundImage: MemoryImage(_profileimage!),
+                            )
+                          : const CircleAvatar(
+                              radius: 50,
+                              backgroundImage: AssetImage('assets/profile.jpg'),
+                            ),
+                      Positioned(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(45),
+                          ),
+                          child: IconButton(
+                            padding: EdgeInsets.zero,
+                            onPressed: () {
+                              showImagePickerOptionforProfile(context);
+                            },
+                            icon: Icon(
+                              Icons.add_circle,
+                              size: 45,
+                              color: Colors.blue,
+                            ),
+                          ),
+                        ),
+                        bottom: 0,
+                        right: 0,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  // Name TextField
+                  TextFormField(
+                    controller: nameController,
+                    validator: (value) =>
+                        value!.isEmpty ? 'Please enter your name' : null,
                     decoration: const InputDecoration(
-                      labelText: 'City',
+                      labelText: 'Full Name',
                       border: OutlineInputBorder(),
                     ),
+                    //Per Hour
+                  ),
+                  const SizedBox(height: 20),
+                  TextFormField(
+                    controller: serviceController,
+                    validator: (value) =>
+                        value!.isEmpty ? 'Please enter your service fee' : null,
+                    decoration: const InputDecoration(
+                      labelText: 'Service Fee',
+                      border: OutlineInputBorder(),
+                    ),
+                    keyboardType:
+                        TextInputType.number, // Set the keyboard type to number
+                    inputFormatters: [
+                      FilteringTextInputFormatter
+                          .digitsOnly, // Allow only digits
+                    ],
                   ),
                   const SizedBox(height: 20),
                   // Phone Number TextField
                   TextFormField(
-                    controller: addressController,
+                    controller: phoneNumberController,
+                    validator: (value) => value!.isEmpty
+                        ? 'Please enter your phone number'
+                        : null,
+                    keyboardType: TextInputType.phone,
                     decoration: const InputDecoration(
-                      labelText: 'Street, Building, and Brgy.',
+                      labelText: 'Phone Number',
+                      border: OutlineInputBorder(),
+                    ),
+                    // Address
+                  ),
+                  const SizedBox(height: 20),
+                  TextFormField(
+                    controller: addressController,
+                    validator: (value) => value!.isEmpty
+                        ? 'Please enter your Complete Address'
+                        : null,
+                    keyboardType: TextInputType.phone,
+                    decoration: const InputDecoration(
+                      labelText: 'Address',
                       border: OutlineInputBorder(),
                     ),
                   ),
