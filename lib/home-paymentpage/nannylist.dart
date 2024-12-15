@@ -6,40 +6,53 @@ import 'package:flutter/material.dart';
 class Nanny {
   final String id; // Add id property
   final String name;
-  final double rating;
+  final double rating; // Average rating
+  final int ratingCount; // Total number of ratings
   final String availability;
-  final String? birthDate;
+  final String? birthdate;
   final int age;
   final String location;
   final String? phoneNumber;
   final bool isAvailable;
   final String role;
+  final String gender; // New property for gender
+  final String address; // New property for address
+  final String service;
 
   Nanny({
     required this.id, // Ensure the id is passed in the constructor
     required this.name,
     required this.rating,
+    required this.ratingCount,
     required this.availability,
-    this.birthDate,
+    this.birthdate,
     required this.age,
     required this.location,
     this.phoneNumber,
     required this.isAvailable,
     required this.role,
+    required this.gender, // Include gender in constructor
+    required this.address,
+    required this.service, // Include address in constructor
   });
 
   factory Nanny.fromMap(Map<String, dynamic> data) {
     return Nanny(
       id: data['id'] ?? '', // Use the Firestore document id here
       name: data['name'] ?? 'Unknown',
-      rating: (data['rating'] ?? 0).toDouble(),
+      rating: (data['averageRating'] ?? 0.0).toDouble(), // Fetch average rating
+      ratingCount: data['ratingCount'] ?? 0, // Fetch total number of ratings
       availability: data['availability'] ?? 'Unavailable',
-      birthDate: data['birthDate'],
+      birthdate: data['birthdate'],
       age: data['age'] ?? 0,
       location: data['location'] ?? 'Unknown',
       phoneNumber: data['phone'],
       isAvailable: data['isAvailable'] ?? false,
       role: data['role'] ?? 'Unknown',
+      gender: data['gender'] ?? 'Not Specified', // Fetch gender from Firestore
+      address: data['address'] ??
+          'No Address Provided', // Fetch address from Firestore
+      service: data['service'] ?? 'N/A',
     );
   }
 }
@@ -53,7 +66,13 @@ class NannyList extends StatelessWidget {
           await FirebaseFirestore.instance.collection('babysitters').get();
 
       return snapshot.docs
-          .map((doc) => Nanny.fromMap(doc.data() as Map<String, dynamic>))
+          .map((doc) {
+            final data = doc.data() as Map<String, dynamic>;
+            return Nanny.fromMap({
+              ...data,
+              'id': doc.id, // Include Firestore document id
+            });
+          })
           .where((nanny) => nanny.role == 'Babysitter')
           .toList();
     } catch (e) {
@@ -87,7 +106,7 @@ class NannyList extends StatelessWidget {
                   MaterialPageRoute(
                     builder: (context) => ViewBabysitter(
                       nanny: nannies[index],
-                      nannyId: '',
+                      nannyId: nannies[index].id, // Pass the nanny ID
                     ),
                   ),
                 );

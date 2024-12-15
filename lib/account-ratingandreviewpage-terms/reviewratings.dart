@@ -1,195 +1,126 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 class ReviewPage extends StatelessWidget {
+  final String nannyName; // Pass the nannyName to filter reviews
+
+  const ReviewPage({Key? key, required this.nannyName}) : super(key: key);
+
+  // Fetch reviews dynamically based on the nannyName
+  Stream<QuerySnapshot> fetchReviews() {
+    return FirebaseFirestore.instance
+        .collection('ratings')
+        .where('nannyName', isEqualTo: nannyName) // Filter by nanny name
+        .orderBy('timestamp', descending: true) // Sort by latest reviews
+        .snapshots();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Review Ratings'),
+        title: const Text('Review Ratings'),
         backgroundColor: Colors.pink.shade100,
         centerTitle: true,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back),
-          onPressed: () {},
-        ),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.close),
-            onPressed: () {},
-          )
-        ],
       ),
       body: Container(
         color: Colors.pink.shade50,
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            children: [
-              UserHeader(),
-              SizedBox(height: 10),
-              RatingFilter(),
-              SizedBox(height: 10),
-              Expanded(child: ReviewList()),
-            ],
-          ),
+        child: StreamBuilder<QuerySnapshot>(
+          stream: fetchReviews(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+              return const Center(child: Text('No reviews available.'));
+            }
+
+            final reviews = snapshot.data!.docs;
+
+            return ListView.builder(
+              itemCount: reviews.length,
+              itemBuilder: (context, index) {
+                final review = reviews[index];
+                return ReviewItem(
+                  parentName: review['parentName'],
+                  rating: review['rating'],
+                  feedback: review['feedback'],
+                  timestamp: (review['timestamp'] as Timestamp).toDate(),
+                );
+              },
+            );
+          },
         ),
       ),
-    );
-  }
-}
-
-class UserHeader extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.pink.shade100,
-        borderRadius: BorderRadius.circular(10),
-      ),
-      padding: EdgeInsets.all(16),
-      child: Row(
-        children: [
-          CircleAvatar(
-            backgroundImage:
-                AssetImage('assets/photo_female_1.jpg'), // Add a local image
-            radius: 30,
-          ),
-          SizedBox(width: 10),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Maricris Dela Cerna',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
-              ),
-              Text('Ratings and Reviews for Babysitter'),
-            ],
-          )
-        ],
-      ),
-    );
-  }
-}
-
-class RatingFilter extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceAround,
-      children: [
-        FilterButton('All', true),
-        FilterButton('5', false),
-        FilterButton('4', false),
-        FilterButton('3', false),
-        FilterButton('2', false),
-        FilterButton('1', false),
-      ],
-    );
-  }
-}
-
-class FilterButton extends StatelessWidget {
-  final String label;
-  final bool selected;
-
-  FilterButton(this.label, this.selected);
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: selected ? Colors.pink.shade300 : Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.pink.shade300),
-      ),
-      padding: EdgeInsets.symmetric(horizontal: 15, vertical: 8),
-      child: Text(
-        label,
-        style: TextStyle(
-          color: selected ? Colors.white : Colors.pink.shade300,
-        ),
-      ),
-    );
-  }
-}
-
-class ReviewList extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return ListView.builder(
-      itemCount: 2, // Add the number of reviews you want
-      itemBuilder: (context, index) {
-        return ReviewItem();
-      },
     );
   }
 }
 
 class ReviewItem extends StatelessWidget {
+  final String parentName;
+  final int rating;
+  final String feedback;
+  final DateTime timestamp;
+
+  const ReviewItem({
+    Key? key,
+    required this.parentName,
+    required this.rating,
+    required this.feedback,
+    required this.timestamp,
+  }) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: EdgeInsets.symmetric(vertical: 10),
+      margin: const EdgeInsets.symmetric(vertical: 10),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                CircleAvatar(
+                const CircleAvatar(
                   backgroundImage:
-                      AssetImage('assets/ajimboy.jpeg'), // Add a local image
+                      AssetImage('assets/ajimboy.jpeg'), // Static avatar
                   radius: 30,
                 ),
-                SizedBox(width: 10),
+                const SizedBox(width: 10),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'James Boy Boliwag',
-                      style: TextStyle(
+                      parentName,
+                      style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
                       ),
                     ),
                     Row(
-                      children: [
-                        Icon(Icons.star, color: Colors.pink),
-                        Icon(Icons.star, color: Colors.pink),
-                        Icon(Icons.star, color: Colors.pink),
-                        Icon(Icons.star, color: Colors.pink),
-                        Icon(Icons.star_half, color: Colors.pink),
-                        SizedBox(width: 5),
-                        Text('4.5'),
-                      ],
+                      children: List.generate(
+                        5,
+                        (index) => Icon(
+                          Icons.star,
+                          color: index < rating ? Colors.pink : Colors.grey,
+                          size: 20,
+                        ),
+                      ),
                     ),
                   ],
-                )
+                ),
               ],
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             Text(
-              'Lorem ipsum dolor sit amet, consectetur adipiscing elit. '
-              'Magna nisi sem in ut adipiscing egestas. Dolor posuere '
-              'vel lacus facilisi non. Lorem ultrices mi orci sed...',
-              style: TextStyle(fontSize: 14),
+              feedback,
+              style: const TextStyle(fontSize: 14),
             ),
-            SizedBox(height: 10),
-            Row(
-              children: [
-                Expanded(
-                  child: Image.asset(
-                      'assets/babysitter1.jpg'), // Add a local image
-                ),
-                SizedBox(width: 10),
-                Expanded(
-                  child: Image.asset(
-                      'assets/babysitter2.jpg'), // Add a local image
-                ),
-              ],
+            const SizedBox(height: 10),
+            Text(
+              'Reviewed on ${timestamp.toLocal()}',
+              style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
             ),
           ],
         ),

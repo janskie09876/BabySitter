@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:geocoding/geocoding.dart';
@@ -15,13 +17,14 @@ class EditBabysitterProfilePage extends StatefulWidget {
 
 class _EditBabysitterProfilePageState extends State<EditBabysitterProfilePage> {
   final _formKey = GlobalKey<FormState>();
-  final nameController = TextEditingController();
-  final phoneNumberController = TextEditingController();
-  final bioController = TextEditingController();
-  final workController = TextEditingController();
-  final _dateController = TextEditingController();
-  final addressController = TextEditingController();
-  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
+  // Text Controllers
+  final TextEditingController nameController = TextEditingController();
+  final TextEditingController _dateController = TextEditingController();
+  final TextEditingController phoneNumberController = TextEditingController();
+  final TextEditingController bioController = TextEditingController();
+  final TextEditingController workController = TextEditingController();
+  final TextEditingController locationController = TextEditingController();
 
   String? radioButtonValue;
   String? selectedCity;
@@ -42,22 +45,24 @@ class _EditBabysitterProfilePageState extends State<EditBabysitterProfilePage> {
   }
 
   Future<void> updateUserProfile() async {
-    if (_formKey.currentState!.validate()) {
-      try {
-        final user = FirebaseAuth.instance.currentUser;
-        if (user != null) {
-          final updatedData = {
-            'name': nameController.text,
-            'phone': phoneNumberController.text,
-            'city': selectedCity,
-            'gender': radioButtonValue,
-            'birthdate': _dateController.text,
-            'bio': bioController.text,
-            'work': workController.text,
-            'latitude': latitude,
-            'longitude': longitude,
-            'address': address,
-          };
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        Map<String, dynamic> updatedData = {
+          'name': nameController.text,
+          'phone': phoneNumberController.text,
+          'location': locationController.text,
+          'gender': radioButtonValue,
+          'birthdate': _dateController.text,
+          'bio': bioController.text,
+          'work': workController.text,
+          'profileImage': _profileimage != null
+              ? await uploadImageToStorage(
+                  _profileimage!) // upload image if selected
+              : null,
+          'latitude': latitude,
+          'longitude': longitude,
+        };
 
           final userDoc = FirebaseFirestore.instance
               .collection('babysitters')
@@ -157,184 +162,127 @@ class _EditBabysitterProfilePageState extends State<EditBabysitterProfilePage> {
                     decoration: const InputDecoration(
                       labelText: 'City',
                       border: OutlineInputBorder(),
-                      filled: true,
-                      fillColor: Color(0xFFF6F6F6),
                     ),
-                    value: selectedCity,
-                    items: cities.map((city) {
-                      return DropdownMenuItem<String>(
-                        value: city,
-                        child: Text(city),
-                      );
-                    }).toList(),
-                    onChanged: (value) {
-                      setState(() {
-                        selectedCity = value;
-                      });
-                    },
-                    validator: (value) =>
-                        value == null ? 'Please select your city' : null,
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 20),
+                  // Phone Number TextField
                   TextFormField(
                     controller: addressController,
                     decoration: const InputDecoration(
                       labelText: 'Street, Building, and Brgy.',
                       border: OutlineInputBorder(),
-                      filled: true,
-                      fillColor: Color(0xFFF6F6F6),
                     ),
-                    onTap: () async {
-                      final tempAddressController = TextEditingController();
-                      await showDialog(
-                        context: context,
-                        builder: (context) {
-                          return AlertDialog(
-                            title: const Text('Enter Your Address'),
-                            content: TextField(
-                              controller: tempAddressController,
-                              decoration: const InputDecoration(
-                                labelText:
-                                    'Enter your street, building, and brgy.',
-                              ),
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () {
-                                  Navigator.of(context).pop();
-                                },
-                                child: const Text('Cancel'),
-                              ),
-                              TextButton(
-                                onPressed: () async {
-                                  Navigator.of(context).pop();
-                                  String enteredAddress =
-                                      tempAddressController.text;
-                                  await getCoordinatesFromAddress(
-                                      enteredAddress);
-
-                                  // Check if latitude and longitude are valid before proceeding
-                                  if (latitude != null && longitude != null) {
-                                    // Delay navigation logic until context is stable and widget is mounted
-                                    if (mounted) {
-                                      // Use `mounted` check to ensure widget is still active before navigating
-                                      final result = await Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) => ViewMap1(
-                                            latitude: latitude!,
-                                            longitude: longitude!,
-                                            isSelectingLocation: true,
-                                            address: enteredAddress,
-                                          ),
-                                        ),
-                                      );
-
-                                      if (result != null && result is LatLng) {
-                                        // Use the mounted check before calling setState
-                                        if (mounted) {
-                                          setState(() {
-                                            latitude = result.latitude;
-                                            longitude = result.longitude;
-                                            address = enteredAddress;
-                                            addressController.text =
-                                                '${enteredAddress}, Lat: ${result.latitude}, Long: ${result.longitude}';
-                                          });
-                                          ScaffoldMessenger.of(context)
-                                              .showSnackBar(
-                                            SnackBar(
-                                              content: Text(
-                                                  'Location selected: ${result.latitude}, ${result.longitude}'),
-                                            ),
-                                          );
-                                        }
-                                      }
-                                    }
-                                  }
-                                },
-                                child: const Text('Next'),
-                              ),
-                            ],
-                          );
-                        },
-                      );
-                    },
                   ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: _dateController,
-                      decoration: const InputDecoration(
-                        labelText: 'Birthdate',
-                        border: OutlineInputBorder(),
+                  const SizedBox(height: 20),
+                  // Location TextField with "Get Exact Location" button
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextFormField(
+                          controller: locationController,
+                          decoration: const InputDecoration(
+                            labelText: 'Location (Lat, Long)',
+                            border: OutlineInputBorder(),
+                          ),
+                          readOnly: true,
+                        ),
                       ),
-                      readOnly: true,
-                      onTap: () async {
-                        final pickedDate = await showDatePicker(
-                          context: context,
-                          initialDate: DateTime.now(),
-                          firstDate: DateTime(1900),
-                          lastDate: DateTime.now(),
-                        );
-                        if (pickedDate != null) {
-                          _dateController.text =
-                              '${pickedDate.year}-${pickedDate.month}-${pickedDate.day}';
-                        }
-                      },
+                      IconButton(
+                        onPressed: getLocation,
+                        icon: Icon(Icons.location_on),
+                        color: Colors.blue,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Birthdate Picker
+                  GestureDetector(
+                    onTap: () => _selectDate(context),
+                    child: AbsorbPointer(
+                      child: TextFormField(
+                        controller: _dateController,
+                        decoration: const InputDecoration(
+                          labelText: 'Birthdate',
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
                     ),
                   ),
-                  const SizedBox(width: 16),
-                  DropdownButton<String>(
-                    value: radioButtonValue,
-                    hint: const Text('Gender'),
-                    items: ['Male', 'Female'].map((gender) {
-                      return DropdownMenuItem<String>(
-                        value: gender,
-                        child: Text(gender),
+                  const SizedBox(height: 25),
+                  // Bio
+                  TextFormField(
+                    controller: bioController,
+                    validator: (value) =>
+                        value!.isEmpty ? 'Please enter your Bio' : null,
+                    keyboardType: TextInputType.phone,
+                    decoration: const InputDecoration(
+                      labelText: 'Bio',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  TextFormField(
+                    controller: workController,
+                    validator: (value) => value!.isEmpty
+                        ? 'Please enter your Work Experience'
+                        : null,
+                    keyboardType: TextInputType.phone,
+                    decoration: const InputDecoration(
+                      labelText: 'Work Experience',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  // Gender Radio Buttons
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: genderOptions.map((String option) {
+                      return Row(
+                        children: [
+                          Radio<String>(
+                            value: option,
+                            groupValue: radioButtonValue,
+                            onChanged: (value) {
+                              setState(() {
+                                radioButtonValue = value!;
+                              });
+                            },
+                          ),
+                          Text(option),
+                        ],
                       );
                     }).toList(),
-                    onChanged: (value) {
-                      setState(() {
-                        radioButtonValue = value!;
-                      });
-                    },
                   ),
+                  const SizedBox(height: 20),
+                  // Save Button
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      backgroundColor: Colors.blue,
+                      minimumSize: Size.fromHeight(45),
+                    ),
+                    onPressed: () {
+                      if (_formKey.currentState!.validate()) {
+                        updateUserProfile();
+                      }
+                    },
+                    child: const Text(
+                      'Save',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 23,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 15),
                 ],
               ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: bioController,
-                decoration: const InputDecoration(
-                  labelText: 'Bio',
-                  border: OutlineInputBorder(),
-                ),
-                maxLines: 3,
-                validator: (value) =>
-                    value == null || value.isEmpty ? 'Enter bio' : null,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: workController,
-                decoration: const InputDecoration(
-                  labelText: 'Work Experience',
-                  border: OutlineInputBorder(),
-                ),
-                maxLines: 3,
-                validator: (value) => value == null || value.isEmpty
-                    ? 'Enter work experience'
-                    : null,
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: updateUserProfile,
-                child: const Text('Update Profile'),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

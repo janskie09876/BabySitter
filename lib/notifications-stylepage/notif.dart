@@ -1,3 +1,4 @@
+import 'package:babysitter/home-paymentpage/payment_methods_page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -35,27 +36,19 @@ class ParentNotifications extends StatelessWidget {
             .orderBy('timestamp', descending: true)
             .snapshots(),
         builder: (context, snapshot) {
-          // Debug: Check the query conditions and connection state
-          print('Fetching notifications for parentId: $parentId');
-
           if (snapshot.connectionState == ConnectionState.waiting) {
-            print('Connection state: waiting for data');
             return const Center(child: CircularProgressIndicator());
           }
 
           if (snapshot.hasError) {
-            print('Error fetching notifications: ${snapshot.error}');
             return Center(child: Text('Error: ${snapshot.error}'));
           }
 
           if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            print('No notifications found for parentId: $parentId');
             return const Center(child: Text('No notifications available.'));
           }
 
           final notifications = snapshot.data!.docs;
-          print(
-              'Fetched ${notifications.length} notifications for parentId: $parentId');
 
           return ListView.builder(
             itemCount: notifications.length,
@@ -63,21 +56,70 @@ class ParentNotifications extends StatelessWidget {
               final notification = notifications[index];
               final data = notification.data() as Map<String, dynamic>;
 
-              // Debug: Log each notification document's data
-              print('Notification data: $data');
+              final isRead = data['read'] == true;
 
               return ListTile(
-                title: Text(data['message'] ?? 'Notification'),
-                subtitle: Text(_formatTimestamp(data['timestamp'])),
-                trailing: IconButton(
-                  icon: Icon(
-                    data['read'] == true ? Icons.check_circle : Icons.circle,
-                    color: data['read'] == true ? Colors.green : Colors.red,
+                title: Text(
+                  data['message'] ?? 'Notification',
+                  style: TextStyle(
+                    fontWeight: isRead
+                        ? FontWeight.normal
+                        : FontWeight.bold, // Bold for unread notifications
                   ),
-                  onPressed: () {
-                    _markAsRead(notification.id);
-                  },
                 ),
+                subtitle: Text(_formatTimestamp(data['timestamp'])),
+                onTap: () async {
+                  // Mark the notification as read when clicked
+                  await _markAsRead(notification.id);
+
+                  // Navigate to the payment page only if the message matches
+                  if (data['message'] ==
+                      'The babysitter has marked the service as completed. Payment is now due.') {
+                    final bookingId = data['bookingId'];
+                    if (bookingId != null && bookingId is String) {
+                      // Check the payment status before navigating
+                      final paymentStatus = await _checkPaymentStatus(
+                          bookingId); // Function to check payment status
+
+                      if (paymentStatus == 'Paid') {
+                        // Show AlertDialog for already paid
+                        showDialog(
+                          context: context,
+                          builder: (context) {
+                            return AlertDialog(
+                              title: const Text('Payment Completed'),
+                              content: const Text(
+                                  'This nanny has already been paid.'),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context),
+                                  child: const Text('OK'),
+                                ),
+                              ],
+                            );
+                          },
+                        );
+                      } else {
+                        // Navigate to the PaymentDetailsPage
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                PaymentDetailsPage(bookingId: bookingId),
+                          ),
+                        );
+                      }
+                    } else {
+                      // Handle the case where bookingId is null
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Error: Missing booking details.'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
+                  }
+                },
               );
             },
           );
@@ -94,14 +136,36 @@ class ParentNotifications extends StatelessWidget {
   }
 
   // Mark notification as read in Firestore
-  void _markAsRead(String notificationId) {
-    FirebaseFirestore.instance
-        .collection('notifications')
-        .doc(notificationId)
-        .update({'read': true}).then((_) {
+  Future<void> _markAsRead(String notificationId) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('notifications')
+          .doc(notificationId)
+          .update({'read': true});
       print('Notification marked as read: $notificationId');
-    }).catchError((error) {
+    } catch (error) {
       print('Error marking notification as read: $error');
-    });
+    }
+  }
+
+  // Check the payment status of a booking
+  Future<String> _checkPaymentStatus(String bookingId) async {
+    try {
+      final bookingSnapshot = await FirebaseFirestore.instance
+          .collection('bookings')
+          .doc(bookingId)
+          .get();
+
+      if (bookingSnapshot.exists) {
+        final bookingData = bookingSnapshot.data() as Map<String, dynamic>;
+        return bookingData['paymentStatus'] ?? 'unpaid'; // Default to 'unpaid'
+      } else {
+        print('Booking not found: $bookingId');
+        return 'unpaid'; // Default to 'unpaid' if booking not found
+      }
+    } catch (e) {
+      print('Error checking payment status: $e');
+      return 'unpaid'; // Default to 'unpaid' in case of error
+    }
   }
 }
