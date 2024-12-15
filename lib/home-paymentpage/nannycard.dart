@@ -1,35 +1,11 @@
-import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:babysitter/home-paymentpage/nannylist.dart';
+import 'package:flutter/material.dart';
 
 class NannyCard extends StatelessWidget {
   final Nanny nanny;
   final VoidCallback onTap;
 
   const NannyCard({required this.nanny, required this.onTap});
-
-  int _calculateAge(DateTime birthDate) {
-    final currentDate = DateTime.now();
-    int age = currentDate.year - birthDate.year;
-
-    if (currentDate.month < birthDate.month ||
-        (currentDate.month == birthDate.month &&
-            currentDate.day < birthDate.day)) {
-      age--;
-    }
-    return age;
-  }
-
-  DateTime _parseBirthDate(String birthDate) {
-    try {
-      // Parse with the expected format "MMMM dd, yyyy"
-      final dateFormat = DateFormat('MMMM dd, yyyy');
-      return dateFormat.parse(birthDate);
-    } catch (e) {
-      print('Error parsing birthDate: $e');
-      return DateTime(1900, 1, 1); // Default fallback date
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -105,22 +81,13 @@ class NannyCard extends StatelessWidget {
                             5,
                             (index) => Icon(
                               Icons.star,
-                              color: index < nanny.rating.floor()
+                              color: index < nanny.rating.toInt()
                                   ? Colors.amber
                                   : Colors.grey.shade400,
                               size: 20,
                             ),
                           ),
                         ),
-                        if (nanny.ratingCount > 0)
-                          Text(
-                            '${nanny.ratingCount} reviews',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey.shade600,
-                              fontFamily: 'Baloo',
-                            ),
-                          ),
                       ],
                     ),
                   ),
@@ -168,7 +135,7 @@ class NannyCard extends StatelessWidget {
                             const SizedBox(width: 4),
                             Flexible(
                               child: Text(
-                                nanny.address,
+                                nanny.location,
                                 overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(
                                   fontSize: 14,
@@ -219,23 +186,15 @@ class NannyCard extends StatelessWidget {
                             ),
                           ),
                           Text(
-                            nanny.birthdate != null &&
-                                    nanny.birthdate!.isNotEmpty
-                                ? '${_calculateAge(_parseBirthDate(nanny.birthdate!))}' // Parse and calculate age
-                                : 'Unknown', // Handle null or empty birthDate
+                            '${nanny.age}',
                             style: const TextStyle(fontFamily: 'Baloo'),
                           ),
                         ],
                       ),
                       const SizedBox(height: 8),
-                      Text(
-                        nanny.gender, // Static gender value, change as needed
-                        style: const TextStyle(fontFamily: 'Baloo'),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        '${nanny.service} per hour', // Added "per hour" text after nanny service
-                        style: const TextStyle(fontFamily: 'Baloo'),
+                      const Text(
+                        'Gender: Female', // Static gender value, change as needed
+                        style: TextStyle(fontFamily: 'Baloo'),
                       ),
                     ],
                   ),
