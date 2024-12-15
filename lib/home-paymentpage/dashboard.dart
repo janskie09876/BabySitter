@@ -246,12 +246,7 @@ class _DashboardState extends State<Dashboard> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => ViewMap1(
-                    isSelectingLocation: true,
-                    address: address,
-                    latitude: latitude,
-                    longitude: longitude,
-                  ),
+                  builder: (context) => ViewMap1(),
                 ),
               );
             },

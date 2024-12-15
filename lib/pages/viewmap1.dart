@@ -1,73 +1,119 @@
 import 'dart:async';
+import 'package:babysitter/home-paymentpage/dashboard_nanny.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:custom_info_window/custom_info_window.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:babysitter/pages/profiledialog.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geocoding/geocoding.dart';
 
 class ViewMap1 extends StatefulWidget {
-  final bool isSelectingLocation;
-  final String address;
-  const ViewMap1(
-      {Key? key,
-      this.isSelectingLocation = false,
-      required this.address,
-      required double latitude,
-      required double longitude})
-      : super(key: key);
+  const ViewMap1({super.key});
 
   @override
-  _ViewMap1State createState() => _ViewMap1State();
+  State<ViewMap1> createState() => _ViewMap1State();
 }
 
 class _ViewMap1State extends State<ViewMap1> {
   Set<Marker> markers = Set();
   Set<Circle> circles = Set();
   GoogleMapController? mapController;
-  late LatLng location;
+  LatLng location = const LatLng(7.313675416878131, 125.67034083922026);
   final CustomInfoWindowController _customInfoWindowController =
       CustomInfoWindowController();
   String locationMsg = 'Current Location of User';
   late String lat;
   late String long;
-  double _radius = 500; // default radius for geofence
-
-  final List<LatLng> markerPositions = [
-    LatLng(7.3099, 125.6708),
-    LatLng(7.3141, 125.6653),
-    LatLng(7.3195, 125.6702),
-    LatLng(7.3165, 125.6748),
-    LatLng(7.3153, 125.6692)
-  ];
-
+  double _radius = 500; // Default radius for geofence
   BitmapDescriptor? currentLocationIcon;
 
-  // Geocode address to get latitude and longitude
-  Future<void> getCoordinatesFromAddress(String address) async {
+  void _liveLocation() {
     try {
-      List<Location> locations = await locationFromAddress(address);
-      setState(() {
-        location = LatLng(locations[0].latitude, locations[0].longitude);
+      LocationSettings locationSettings = const LocationSettings(
+        accuracy:
+            LocationAccuracy.high, // Use high accuracy for precise updates
+        distanceFilter:
+            100, // Only update location if the user moves by 100 meters
+      );
+
+      // Listen to location updates
+      Geolocator.getPositionStream(locationSettings: locationSettings)
+          .listen((Position position) {
+        // Update the latitude and longitude
+        lat = position.latitude.toString();
+        long = position.longitude.toString();
+
+        // Update the state with the new position
+        setState(() {
+          location = LatLng(position.latitude, position.longitude);
+          locationMsg = 'Lat: $lat , Long: $long';
+
+          // Move the map's camera to the new location
+          _customInfoWindowController.googleMapController?.animateCamera(
+            CameraUpdate.newCameraPosition(
+              CameraPosition(target: location, zoom: 15.0),
+            ),
+          );
+
+          // Add a marker for the current location
+          addMyMarker(location);
+        });
       });
     } catch (e) {
-      print('Error: $e');
+      print('Error in live location: $e');
+
+      // Show an error message to the user
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Invalid address')),
+        SnackBar(content: Text('Error updating live location: $e')),
       );
     }
   }
 
-  Future<void> _loadCustomIcons() async {
-    currentLocationIcon = await BitmapDescriptor.fromAssetImage(
-        const ImageConfiguration(), "assets/images/mylocation.bmp");
+  // Fetch LatLng from Firebase
+  Future<LatLng> fetchLatLngFromFirebase() async {
+    try {
+      String userId = FirebaseAuth.instance.currentUser!.uid;
+
+      DocumentSnapshot doc = await FirebaseFirestore.instance
+          .collection('babysitters')
+          .doc(userId)
+          .get();
+
+      if (!doc.exists) {
+        throw Exception('Babysitter document not found');
+      }
+
+      final data = doc.data() as Map<String, dynamic>?; // Cast to map or null
+      if (data == null ||
+          !data.containsKey('latitude') ||
+          !data.containsKey('longitude')) {
+        throw Exception('Latitude or longitude field missing in Firestore');
+      }
+
+      double latitude = data['latitude'];
+      double longitude = data['longitude'];
+
+      return LatLng(latitude, longitude);
+    } catch (e) {
+      print('Error fetching LatLng: $e');
+      throw Exception('Could not fetch location');
+    }
   }
 
+  // Load custom location icon
+  Future<void> _loadCustomIcons() async {
+    currentLocationIcon = await BitmapDescriptor.fromAssetImage(
+        const ImageConfiguration(), "assets/mylocation.bmp");
+  }
+
+  // Get user's current location
   Future<Position> _getCurrentLocation() async {
     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
       return Future.error('Location services are disabled');
     }
+
     LocationPermission permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
@@ -75,18 +121,21 @@ class _ViewMap1State extends State<ViewMap1> {
         return Future.error('Location permissions are denied');
       }
     }
+
     if (permission == LocationPermission.deniedForever) {
       return Future.error(
           'Location permissions are permanently denied, we cannot request permission');
     }
+
     return await Geolocator.getCurrentPosition();
   }
 
+  // Add a geofence circle
   void _addGeofenceCircle(LatLng position) {
     setState(() {
       circles = {
         Circle(
-          circleId: CircleId("geofence"),
+          circleId: const CircleId("geofence"),
           center: position,
           radius: _radius,
           fillColor: Colors.blue.withOpacity(0.3),
@@ -98,8 +147,14 @@ class _ViewMap1State extends State<ViewMap1> {
     _filterMarkers();
   }
 
-  // Filter markers based on distance from the center
+  // Filter markers based on geofence radius
   void _filterMarkers() {
+    List<LatLng> markerPositions = [
+      const LatLng(7.313675, 125.670341),
+      const LatLng(7.313700, 125.670400),
+      const LatLng(7.314000, 125.670800),
+    ];
+
     setState(() {
       markers.clear();
       for (var position in markerPositions) {
@@ -116,10 +171,8 @@ class _ViewMap1State extends State<ViewMap1> {
               markerId: MarkerId(position.toString()),
               position: position,
               icon: BitmapDescriptor.defaultMarker,
-              infoWindow: InfoWindow(title: " ${position.toString()}"),
-              onTap: () {
-                _showProfileDialog();
-              },
+              infoWindow: InfoWindow(title: position.toString()),
+              onTap: () => _showDashboard(), // Navigate to dashboard
             ),
           );
         }
@@ -127,7 +180,8 @@ class _ViewMap1State extends State<ViewMap1> {
     });
   }
 
-  addMyMarker(LatLng myLoc) {
+  // Add user's current location marker
+  void addMyMarker(LatLng myLoc) {
     setState(() {
       markers.add(
         Marker(
@@ -139,63 +193,58 @@ class _ViewMap1State extends State<ViewMap1> {
           infoWindow: const InfoWindow(title: "Your Current Location"),
         ),
       );
-      _addGeofenceCircle(myLoc); // Add geofence circle at current location
+      _addGeofenceCircle(myLoc);
     });
 
-    _filterMarkers(); // Filter existing markers based on the radius
+    _filterMarkers();
   }
 
-  void _liveLocation() {
-    LocationSettings locationSettings = const LocationSettings(
-      accuracy: LocationAccuracy.high,
-      distanceFilter: 100,
+  // Navigate to the nanny dashboard
+  void _showDashboard() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const DashboardNanny(),
+      ),
     );
-    Geolocator.getPositionStream(locationSettings: locationSettings)
-        .listen((Position position) {
-      lat = position.latitude.toString();
-      long = position.longitude.toString();
-      setState(() {
-        location = LatLng(position.latitude, position.longitude);
-        locationMsg = 'Lat: $lat , Long: $long';
-        _customInfoWindowController.googleMapController?.animateCamera(
-            CameraUpdate.newCameraPosition(
-                CameraPosition(target: location, zoom: 15.0)));
-
-        addMyMarker(location);
-      });
-    });
-  }
-
-  void onMapCreated(controller) {
-    setState(() {
-      mapController = controller;
-    });
   }
 
   @override
   void initState() {
     super.initState();
 
-    _loadCustomIcons(); // Load custom icons
-    getCoordinatesFromAddress(widget.address).then((_) {
-      lat = '${location.latitude}';
-      long = '${location.longitude}';
+    _loadCustomIcons();
+
+    _getCurrentLocation().then((value) {
+      lat = '${value.latitude}';
+      long = '${value.longitude}';
       setState(() {
+        location = LatLng(value.latitude, value.longitude);
         locationMsg = 'Lat: $lat , Long: $long';
-        _addGeofenceCircle(location); // Show the circle immediately
+        _addGeofenceCircle(location);
       });
       _liveLocation();
+    }).catchError((error) {
+      print('Error getting initial location: $error');
+    });
+
+    fetchLatLngFromFirebase().then((latLng) {
+      setState(() {
+        location = latLng;
+        _addGeofenceCircle(location);
+      });
+    }).catchError((error) {
+      print('Error fetching babysitter location: $error');
     });
   }
 
-  void _showProfileDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => const ProfileDialog(),
-    );
-  }
-
-  Widget loadMap() => Column(
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Map View'),
+      ),
+      body: Column(
         children: [
           Stack(
             children: [
@@ -214,13 +263,8 @@ class _ViewMap1State extends State<ViewMap1> {
                     target: location,
                     zoom: 15.0,
                   ),
-                  onTap: (LatLng tappedPosition) {
-                    if (widget.isSelectingLocation) {
-                      Navigator.pop(
-                          context, tappedPosition); // Return tapped position
-                    } else {
-                      _customInfoWindowController.hideInfoWindow!();
-                    }
+                  onTap: (position) {
+                    _customInfoWindowController.hideInfoWindow!();
                   },
                   onCameraMove: (position) {
                     _customInfoWindowController.onCameraMove!();
@@ -254,7 +298,7 @@ class _ViewMap1State extends State<ViewMap1> {
                   onChanged: (value) {
                     setState(() {
                       _radius = value;
-                      _addGeofenceCircle(location); // Update circle radius
+                      _addGeofenceCircle(location);
                     });
                   },
                 ),
@@ -262,15 +306,7 @@ class _ViewMap1State extends State<ViewMap1> {
             ),
           ),
         ],
-      );
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Map View'),
       ),
-      body: loadMap(),
     );
   }
 }
