@@ -30,6 +30,7 @@ class ConfirmedBookingsList extends StatelessWidget {
           itemCount: bookings.length,
           itemBuilder: (context, index) {
             final bookingDoc = bookings[index];
+            final bookingId = bookingDoc.id; // Get the bookingId
 
             return StreamBuilder<QuerySnapshot>(
               stream: bookingDoc.reference.collection('booking').snapshots(),
@@ -56,10 +57,8 @@ class ConfirmedBookingsList extends StatelessWidget {
                       onTap: () {
                         _showBookingDetailsDialog(
                           context,
-                          bookingDoc.id,
-                          subBookingDoc.id,
+                          bookingId, // Pass the bookingId
                           subBooking,
-                          true, // Indicates it's a confirmed booking
                         );
                       },
                     );
@@ -75,10 +74,8 @@ class ConfirmedBookingsList extends StatelessWidget {
 
   void _showBookingDetailsDialog(
     BuildContext context,
-    String bookingId,
-    String subBookingId,
+    String bookingId, // Receive the bookingId
     Map<String, dynamic> bookingDetails,
-    bool isConfirmed,
   ) {
     showDialog(
       context: context,
@@ -92,43 +89,75 @@ class ConfirmedBookingsList extends StatelessWidget {
               Text('Name: ${bookingDetails['name'] ?? 'Unknown'}'),
               Text('Phone: ${bookingDetails['phone'] ?? 'Unknown'}'),
               Text('Date: ${bookingDetails['date'] ?? 'Unknown'}'),
-              Text('Time: ${bookingDetails['time'] ?? 'Unknown'}'),
+              Text('Start Time: ${bookingDetails['startTime'] ?? 'Unknown'}'),
+              Text('End Time: ${bookingDetails['endTime'] ?? 'Unknown'}'),
             ],
           ),
-          actions: isConfirmed
-              ? [
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                    child: const Text('Close'),
-                  ),
-                ]
-              : [
-                  TextButton(
-                    onPressed: () {
-                      FirebaseFirestore.instance
-                          .collection('bookings')
-                          .doc(bookingId)
-                          .update({'status': 'Declined'});
-                      Navigator.pop(context);
-                    },
-                    child: const Text('Decline',
-                        style: TextStyle(color: Colors.red)),
-                  ),
-                  ElevatedButton(
-                    onPressed: () {
-                      FirebaseFirestore.instance
-                          .collection('bookings')
-                          .doc(bookingId)
-                          .update({'status': 'Confirmed'});
-                      Navigator.pop(context);
-                    },
-                    child: const Text('Accept'),
-                  ),
-                ],
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text('Close'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                _markAsCompleted(
+                  context,
+                  bookingId, // Pass the bookingId
+                  bookingDetails['senderId'], // Correctly pass the parentId
+                );
+              },
+              child: const Text('Mark as Completed'),
+            ),
+          ],
         );
       },
     );
+  }
+
+  void _markAsCompleted(
+      BuildContext context, String bookingId, String parentId) async {
+    try {
+      // Update the booking status to "Completed"
+      await FirebaseFirestore.instance
+          .collection('bookings')
+          .doc(bookingId)
+          .update({'status': 'Completed'});
+
+      // Send a notification to the parent with bookingId
+      await _sendNotification(
+        parentId: parentId,
+        bookingId: bookingId, // Include bookingId in the notification
+        message:
+            'The babysitter has marked the service as completed. Payment is now due.',
+      );
+
+      Navigator.pop(context);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Booking marked as completed.')),
+      );
+    } catch (e) {
+      print('Error marking booking as completed: $e');
+    }
+  }
+
+  Future<void> _sendNotification({
+    required String parentId,
+    required String bookingId, // Pass bookingId
+    required String message,
+  }) async {
+    try {
+      await FirebaseFirestore.instance.collection('notifications').add({
+        'parentId': parentId,
+        'bookingId': bookingId, // Save bookingId in the notification
+        'message': message,
+        'timestamp': FieldValue.serverTimestamp(),
+        'read': false, // To track unread notifications
+      });
+    } catch (e) {
+      print('Error sending notification: $e');
+    }
   }
 }

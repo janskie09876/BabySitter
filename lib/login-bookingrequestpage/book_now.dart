@@ -6,7 +6,7 @@ import 'package:intl/intl.dart';
 
 class BookNow extends StatefulWidget {
   final Nanny? nanny;
-  final String nannyId; // Accept Firebase document ID of the nanny
+  final String nannyId;
 
   const BookNow({Key? key, required this.nannyId, this.nanny})
       : super(key: key);
@@ -17,7 +17,8 @@ class BookNow extends StatefulWidget {
 
 class _BookNowState extends State<BookNow> {
   DateTime? selectedDate;
-  TimeOfDay? selectedTime;
+  TimeOfDay? startTime;
+  TimeOfDay? endTime;
   TextEditingController nameController = TextEditingController();
   TextEditingController phoneController = TextEditingController();
   TextEditingController messageController = TextEditingController();
@@ -37,15 +38,19 @@ class _BookNowState extends State<BookNow> {
     }
   }
 
-  Future<void> _selectTime(BuildContext context) async {
+  Future<void> _selectTime(BuildContext context, bool isStartTime) async {
     final TimeOfDay currentTime = TimeOfDay.now();
     final TimeOfDay? picked = await showTimePicker(
       context: context,
       initialTime: currentTime,
     );
-    if (picked != null && picked != selectedTime) {
+    if (picked != null) {
       setState(() {
-        selectedTime = picked;
+        if (isStartTime) {
+          startTime = picked;
+        } else {
+          endTime = picked;
+        }
       });
     }
   }
@@ -72,83 +77,84 @@ class _BookNowState extends State<BookNow> {
 
   void _submitBooking() async {
     if (widget.nannyId.isEmpty) {
-      // Handle the case where the nannyId is empty
       print('Error: nannyId is empty!');
       return;
     }
 
-    final currentUserId = FirebaseAuth
-        .instance.currentUser!.uid; // Parent's ID (current logged-in user)
+    if (startTime == null || endTime == null || selectedDate == null) {
+      print('Error: Missing date or time!');
+      return;
+    }
+
+    final currentUserId = FirebaseAuth.instance.currentUser!.uid;
+
+    // Fetch the current user's name (parent's name)
+    String currentUserName = 'Unknown';
+    String nannyName = 'Unknown';
+
+    try {
+      // Fetch the parent's name
+      final userDoc = await FirebaseFirestore.instance
+          .collection('parents')
+          .doc(currentUserId)
+          .get();
+      if (userDoc.exists) {
+        currentUserName = userDoc.data()?['name'] ?? 'Unknown';
+      }
+
+      // Fetch the nanny's name
+      final nannyDoc = await FirebaseFirestore.instance
+          .collection('babysitters')
+          .doc(widget.nannyId)
+          .get();
+      if (nannyDoc.exists) {
+        nannyName = nannyDoc.data()?['name'] ?? 'Unknown';
+      }
+    } catch (e) {
+      print('Error fetching names: $e');
+    }
+
     final bookingData = {
-      'createAt':
-          FieldValue.serverTimestamp(), // Timestamp when the booking was made
+      'createAt': FieldValue.serverTimestamp(),
       'user1': currentUserId, // Parent's ID
-      'user2': widget.nannyId, // Nanny's (babysitter's) ID
+      'user2': widget.nannyId, // Babysitter's ID
+      'user1Name': currentUserName, // Parent's name
+      'user2Name': nannyName, // Babysitter's name
       'status': 'Pending', // Booking status
+      'paymentStatus': 'Pending', // Initialize payment status
     };
 
-    // Booking details inside the subcollection "booking" for the specific nanny
     final bookingDetails = {
-      'date': selectedDate != null
-          ? DateFormat('yyyy-MM-dd').format(selectedDate!)
-          : '',
-      'time': selectedTime != null ? selectedTime!.format(context) : '',
+      'date': DateFormat('yyyy-MM-dd').format(selectedDate!),
+      'startTime': startTime!.format(context),
+      'endTime': endTime!.format(context),
       'name': nameController.text,
       'phone': phoneController.text,
-      'receiverId': widget.nannyId, // The babysitter's ID
-      'senderId': currentUserId, // The parent's ID
-      'status': 'Pending', // Initial status of the booking
+      'message': messageController.text,
+      'receiverId': widget.nannyId, // Babysitter's ID
+      'receiverName': nannyName, // Babysitter's name
+      'senderId': currentUserId, // Parent's ID
+      'senderName': currentUserName, // Parent's name
+      'status': 'Pending',
     };
 
     try {
-      // Add booking to the 'bookings' collection with unique booking ID for the parent
+      // Create a new booking document in the 'bookings' collection
       var bookingRef = await FirebaseFirestore.instance
-          .collection('bookings') // Parent collection (bookings)
-          .add(bookingData); // Add the booking data for the parent
+          .collection('bookings')
+          .add(bookingData);
 
-      // Now, inside the specific nanny document, create a subcollection "booking"
+      // Add booking details as a sub-collection
       await FirebaseFirestore.instance
-          .collection('bookings') // Parent collection (bookings)
-          .doc(bookingRef.id) // Use the parent booking document ID
-          .collection('booking') // Subcollection for bookings
-          .add(
-              bookingDetails); // Add the booking details under the booking subcollection
+          .collection('bookings')
+          .doc(bookingRef.id)
+          .collection('booking')
+          .add(bookingDetails);
 
-      // Optionally, save the booking to the nanny's booking subcollection
-      await FirebaseFirestore.instance
-          .collection('babysitters') // Collection for babysitters
-          .doc(widget.nannyId) // Nanny document
-          .collection('bookings') // Nanny's booking subcollection
-          .add({
-        'createAt': FieldValue.serverTimestamp(),
-        'user1': currentUserId, // Parent's ID
-        'user2': widget.nannyId, // Nanny's ID
-        'status': 'Pending',
-      });
-
-      // Optionally, save the booking to the parent document as well
-      await FirebaseFirestore.instance
-          .collection('parents') // Collection for parents
-          .doc(currentUserId) // Parent's document
-          .collection('bookings') // Parent's booking subcollection
-          .add({
-        'createAt': FieldValue.serverTimestamp(),
-        'user1': currentUserId,
-        'user2': widget.nannyId,
-        'status': 'Pending',
-      });
-
-      _showConfirmationDialog(
-          context); // Show confirmation dialog after successful booking
+      _showConfirmationDialog(context);
     } catch (e) {
       print('Error submitting booking: $e');
     }
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    print('nannyId received: ${widget.nannyId}'); // Debugging line
   }
 
   @override
@@ -192,8 +198,8 @@ class _BookNowState extends State<BookNow> {
               GestureDetector(
                 onTap: () => _selectDate(context),
                 child: Container(
-                  padding:
-                      EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
+                  padding: const EdgeInsets.symmetric(
+                      vertical: 12.0, horizontal: 16.0),
                   decoration: BoxDecoration(
                     border: Border.all(color: Colors.grey),
                     borderRadius: BorderRadius.circular(8),
@@ -213,10 +219,10 @@ class _BookNowState extends State<BookNow> {
               ),
               const SizedBox(height: 20),
               GestureDetector(
-                onTap: () => _selectTime(context),
+                onTap: () => _selectTime(context, true),
                 child: Container(
-                  padding:
-                      EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
+                  padding: const EdgeInsets.symmetric(
+                      vertical: 12.0, horizontal: 16.0),
                   decoration: BoxDecoration(
                     border: Border.all(color: Colors.grey),
                     borderRadius: BorderRadius.circular(8),
@@ -226,9 +232,32 @@ class _BookNowState extends State<BookNow> {
                       Icon(Icons.access_time, color: Colors.grey.shade600),
                       const SizedBox(width: 8),
                       Text(
-                        selectedTime == null
-                            ? 'Choose a time'
-                            : selectedTime!.format(context),
+                        startTime == null
+                            ? 'Choose start time'
+                            : startTime!.format(context),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              GestureDetector(
+                onTap: () => _selectTime(context, false),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                      vertical: 12.0, horizontal: 16.0),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.access_time, color: Colors.grey.shade600),
+                      const SizedBox(width: 8),
+                      Text(
+                        endTime == null
+                            ? 'Choose end time'
+                            : endTime!.format(context),
                       ),
                     ],
                   ),
@@ -240,7 +269,7 @@ class _BookNowState extends State<BookNow> {
                 child: const Text('Confirm Booking'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFFE3838E),
-                  padding: EdgeInsets.symmetric(vertical: 14.0),
+                  padding: const EdgeInsets.symmetric(vertical: 14.0),
                 ),
               ),
             ],

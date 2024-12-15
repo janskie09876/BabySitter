@@ -1,9 +1,37 @@
+import 'package:babysitter/account-ratingandreviewpage-terms/reviewratings.dart';
 import 'package:babysitter/home-paymentpage/nannylist.dart';
 import 'package:babysitter/login-bookingrequestpage/book_now.dart';
 import 'package:babysitter/menu-chatpage/babysitterchat.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:babysitter/home-paymentpage/nannycard.dart';
+
+int _calculateAge(DateTime birthDate) {
+  final currentDate = DateTime.now();
+  int age = currentDate.year - birthDate.year;
+
+  if (currentDate.month < birthDate.month ||
+      (currentDate.month == birthDate.month &&
+          currentDate.day < birthDate.day)) {
+    age--;
+  }
+  return age;
+}
+
+DateTime _parseBirthDate(String birthDate) {
+  try {
+    if (birthDate.isEmpty) {
+      return DateTime(1900, 1, 1); // Default fallback date for empty strings
+    }
+    final dateFormat = DateFormat('MMMM dd, yyyy'); // Expected format
+    return dateFormat.parse(birthDate);
+  } catch (e) {
+    print('Error parsing birthDate: $e');
+    return DateTime(1900, 1, 1); // Default fallback date for parsing errors
+  }
+}
 
 class ViewBabysitter extends StatefulWidget {
   final Nanny? nanny; // Use the Nanny class from nannylist.dart
@@ -111,13 +139,18 @@ class _ViewBabysitterState extends State<ViewBabysitter> {
               ),
             ),
             const SizedBox(height: 8),
-            Text('Age: ${widget.nanny?.age}',
+            Text(
+              widget.nanny?.birthdate != null &&
+                      widget.nanny!.birthdate!.isNotEmpty
+                  ? 'Age: ${_calculateAge(_parseBirthDate(widget.nanny!.birthdate ?? ''))}'
+                  : 'Age: Unknown', // Handle null or empty birthdate
+              style: const TextStyle(fontFamily: 'Baloo', fontSize: 16),
+            ),
+
+            Text('Date of Birth: ${widget.nanny?.birthdate}',
                 style: const TextStyle(fontFamily: 'Baloo', fontSize: 16)),
             const SizedBox(height: 8),
-            Text('Date of Birth: ${widget.nanny?.birthDate}',
-                style: const TextStyle(fontFamily: 'Baloo', fontSize: 16)),
-            const SizedBox(height: 8),
-            Text('Location: ${widget.nanny?.location}',
+            Text('Address: ${widget.nanny?.address}',
                 style: const TextStyle(fontFamily: 'Baloo', fontSize: 16)),
             const SizedBox(height: 8),
             Text('Phone Number: ${widget.nanny?.phoneNumber}',
@@ -251,6 +284,24 @@ class _ViewBabysitterState extends State<ViewBabysitter> {
                   ),
                 ),
               ],
+            ),
+            const SizedBox(width: 16),
+            ElevatedButton(
+              onPressed: () {
+                // Navigate to BookNow and pass the nanny data
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ReviewPage(
+                      nannyName: '',
+                    ),
+                  ),
+                );
+              },
+              child: const Text('Babysitter Ratings & Reviews'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFE3838E),
+              ),
             ),
           ],
         ),

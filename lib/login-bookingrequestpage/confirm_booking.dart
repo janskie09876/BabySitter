@@ -249,7 +249,9 @@ class _ConfirmBookingState extends State<ConfirmBooking> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (context) => PaymentDetailsPage()),
+                          builder: (context) => PaymentDetailsPage(
+                                bookingId: '',
+                              )),
                     );
                   },
                   child: const Text(

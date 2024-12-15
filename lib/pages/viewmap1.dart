@@ -4,19 +4,28 @@ import 'package:flutter/material.dart';
 import 'package:babysitter/pages/profiledialog.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:geocoding/geocoding.dart';
 
 class ViewMap1 extends StatefulWidget {
-  const ViewMap1({super.key});
+  final bool isSelectingLocation;
+  final String address;
+  const ViewMap1(
+      {Key? key,
+      this.isSelectingLocation = false,
+      required this.address,
+      required double latitude,
+      required double longitude})
+      : super(key: key);
 
   @override
-  State<ViewMap1> createState() => _ViewMap1State();
+  _ViewMap1State createState() => _ViewMap1State();
 }
 
 class _ViewMap1State extends State<ViewMap1> {
   Set<Marker> markers = Set();
   Set<Circle> circles = Set();
   GoogleMapController? mapController;
-  LatLng location = const LatLng(7.313675416878131, 125.67034083922026);
+  late LatLng location;
   final CustomInfoWindowController _customInfoWindowController =
       CustomInfoWindowController();
   String locationMsg = 'Current Location of User';
@@ -33,6 +42,21 @@ class _ViewMap1State extends State<ViewMap1> {
   ];
 
   BitmapDescriptor? currentLocationIcon;
+
+  // Geocode address to get latitude and longitude
+  Future<void> getCoordinatesFromAddress(String address) async {
+    try {
+      List<Location> locations = await locationFromAddress(address);
+      setState(() {
+        location = LatLng(locations[0].latitude, locations[0].longitude);
+      });
+    } catch (e) {
+      print('Error: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Invalid address')),
+      );
+    }
+  }
 
   Future<void> _loadCustomIcons() async {
     currentLocationIcon = await BitmapDescriptor.fromAssetImage(
@@ -153,11 +177,10 @@ class _ViewMap1State extends State<ViewMap1> {
     super.initState();
 
     _loadCustomIcons(); // Load custom icons
-    _getCurrentLocation().then((value) {
-      lat = '${value.latitude}';
-      long = '${value.longitude}';
+    getCoordinatesFromAddress(widget.address).then((_) {
+      lat = '${location.latitude}';
+      long = '${location.longitude}';
       setState(() {
-        location = LatLng(value.latitude, value.longitude);
         locationMsg = 'Lat: $lat , Long: $long';
         _addGeofenceCircle(location); // Show the circle immediately
       });
@@ -191,8 +214,13 @@ class _ViewMap1State extends State<ViewMap1> {
                     target: location,
                     zoom: 15.0,
                   ),
-                  onTap: (position) {
-                    _customInfoWindowController.hideInfoWindow!();
+                  onTap: (LatLng tappedPosition) {
+                    if (widget.isSelectingLocation) {
+                      Navigator.pop(
+                          context, tappedPosition); // Return tapped position
+                    } else {
+                      _customInfoWindowController.hideInfoWindow!();
+                    }
                   },
                   onCameraMove: (position) {
                     _customInfoWindowController.onCameraMove!();
@@ -213,7 +241,6 @@ class _ViewMap1State extends State<ViewMap1> {
               ),
             ],
           ),
-          // Slider for adjusting radius
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: Column(
