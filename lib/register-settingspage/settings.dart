@@ -1,173 +1,166 @@
 import 'package:flutter/material.dart';
-import 'package:babysitter/home-paymentpage/dashboard.dart';
-import 'package:babysitter/location-transactionhistorypage/transactionhistorypage.dart';
-import 'package:babysitter/account-ratingandreviewpage-terms/termspage.dart';
-import 'package:babysitter/notifications-stylepage/styles.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
-class Settings extends StatelessWidget {
-  const Settings({super.key, required String title});
+class AppColors {
+  static const Color primaryColor = Color(0xFFC47F42); // Orange
+  static const Color lightBackground = Color(0xFFF5F5F5); // Light background
+  static const Color darkBackground = Color(0xFF1E1E1E); // Dark background
+  static const Color beige = Color(0xFFE3C3A3); // Beige
+  static const Color coffeeBrown = Color(0xFF51331A); // Coffee Brown
+  static const Color lightCoffeeBrown = Color(0xFF7B5B42); // Light Coffee Brown
+  static const Color blackColor = Color(0xFF000000); // Black
+  static const Color grayColor = Color(0xFF7D7D7D); // Gray
+  static const Color successColor = Color(0xFF4CAF50); // Green
+  static const Color warningColor = Color(0xFFFBC02D); // Yellow
+  static const Color whiteColor = Color(0xFFFFFFFF); // White
+  static const Color redColor = Color(0xFFFF0000); // Red
+}
+
+class SettingsPage extends StatefulWidget {
+  @override
+  _SettingsPageState createState() => _SettingsPageState();
+}
+
+class _SettingsPageState extends State<SettingsPage> {
+  String userName = "Guest"; // Default user name
+
+  @override
+  void initState() {
+    super.initState();
+    fetchUserName();
+  }
+
+  // Function to fetch the current user's name from Firestore
+  Future<void> fetchUserName() async {
+    String name = await getCurrentUserName();
+    setState(() {
+      userName = name; // Update the UI with the fetched name
+    });
+  }
+
+  Future<String> getCurrentUserName() async {
+    try {
+      User? user = FirebaseAuth.instance.currentUser; // Get the current user
+      if (user != null) {
+        // Query Firestore for the user's document using the UID
+        DocumentSnapshot userDoc = await FirebaseFirestore.instance
+            .collection('parents')
+            .doc(user.uid) // Match document ID with the UID
+            .get();
+
+        // Return the name field or default to "Guest"
+        return userDoc['name'] ?? "Guest";
+      }
+    } catch (e) {
+      print("Error fetching user name: $e");
+    }
+    return "Guest"; // Default value if no user is logged in
+  }
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(fontFamily: 'BalsamiqSans'),
-      home: Scaffold(
-        body: ListView(
+    return Scaffold(
+      backgroundColor: AppColors.lightBackground,
+      appBar: AppBar(
+        backgroundColor: AppColors.primaryColor,
+        title: Text(
+          'Settings',
+          style: TextStyle(color: AppColors.whiteColor),
+        ),
+        centerTitle: true,
+        elevation: 0,
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
           children: [
-            const SettingsScreen(),
+            Row(
+              children: [
+                CircleAvatar(
+                  radius: 30,
+                  backgroundImage: NetworkImage(
+                      'https://via.placeholder.com/150'), // Replace with actual image URL
+                ),
+                SizedBox(width: 16),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      userName, // Display the dynamic user name
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.blackColor,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            SizedBox(height: 20),
+            Divider(),
+            ListTile(
+              leading: Icon(Icons.person, color: AppColors.primaryColor),
+              title: Text('Personal data',
+                  style: TextStyle(color: AppColors.blackColor)),
+              trailing: Icon(Icons.arrow_forward_ios, color: Color(0xFFC47F42)),
+              onTap: () {},
+            ),
+            Divider(),
+            ListTile(
+              leading: Icon(Icons.payment, color: AppColors.primaryColor),
+              title: Text('Payment methods',
+                  style: TextStyle(color: AppColors.blackColor)),
+              trailing: Icon(Icons.arrow_forward_ios, color: Color(0xFFC47F42)),
+              onTap: () {},
+            ),
+            Divider(),
+            ListTile(
+              leading: Icon(Icons.history, color: AppColors.primaryColor),
+              title: Text('Payments history',
+                  style: TextStyle(color: AppColors.blackColor)),
+              trailing: Icon(Icons.arrow_forward_ios, color: Color(0xFFC47F42)),
+              onTap: () {},
+            ),
+            Divider(),
+            ListTile(
+              leading: Icon(Icons.notifications, color: AppColors.primaryColor),
+              title: Text('Notifications',
+                  style: TextStyle(color: AppColors.blackColor)),
+              trailing: Icon(Icons.arrow_forward_ios, color: Color(0xFFC47F42)),
+              onTap: () {},
+            ),
+            Divider(),
+            ListTile(
+              leading: Icon(Icons.security,
+                  color: AppColors.primaryColor), // Icon on the left
+              title: Text('Privacy Policy',
+                  style: TextStyle(color: AppColors.blackColor)),
+              trailing: Icon(Icons.arrow_forward_ios,
+                  color: Color(0xFFC47F42)), // Arrow icon on the right
+              onTap: () {},
+            ),
+            Divider(),
+            ListTile(
+              leading: Icon(Icons.description,
+                  color: AppColors.primaryColor), // Icon on the left
+              title: Text('Terms and Condition',
+                  style: TextStyle(color: AppColors.blackColor)),
+              trailing: Icon(Icons.arrow_forward_ios,
+                  color: Color(0xFFC47F42)), // Arrow icon on the right
+              onTap: () {},
+            ),
+            Spacer(),
+            ListTile(
+              leading: Icon(Icons.logout, color: Color(0xFF000000)),
+              title:
+                  Text('Log Out', style: TextStyle(color: AppColors.redColor)),
+              onTap: () {},
+            ),
           ],
         ),
       ),
-    );
-  }
-}
-
-class SettingsScreen extends StatefulWidget {
-  const SettingsScreen({super.key});
-
-  @override
-  _SettingsScreenState createState() => _SettingsScreenState();
-}
-
-class _SettingsScreenState extends State<SettingsScreen> {
-  bool isNotificationsEnabled = true;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        // AppBar section
-        Container(
-          width: double.infinity,
-          height: 80,
-          color: AppStyles.primaryColor,
-          child: Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.arrow_back, color: Colors.black),
-                  onPressed: () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (context) => Dashboard()),
-                    );
-                  },
-                ),
-                Text(
-                  'Settings',
-                  style: AppStyles.headingStyle.copyWith(
-                    fontFamily: 'Baloo', // Headings and Titles
-                    fontSize: 20,
-                  ),
-                ),
-                const SizedBox(width: 48),
-              ],
-            ),
-          ),
-        ),
-
-        // Settings options
-        Container(
-          padding: AppStyles.defaultPadding,
-          color: AppStyles.backgroundColor,
-          child: Column(
-            children: [
-              buildSettingsItem(
-                icon: Icons.person_outline,
-                title: "Account Settings",
-                trailing:
-                    const Icon(Icons.chevron_right, color: AppStyles.textColor),
-              ),
-              buildDivider(),
-              buildSettingsItem(
-                icon: Icons.notifications_none,
-                title: "Notifications",
-                trailing: Switch(
-                  value: isNotificationsEnabled,
-                  onChanged: (value) {
-                    setState(() {
-                      isNotificationsEnabled = value;
-                    });
-                  },
-                  activeColor: AppStyles.whiteColor,
-                  activeTrackColor: AppStyles.secondaryColor,
-                  inactiveTrackColor: Colors.grey,
-                  inactiveThumbColor: AppStyles.whiteColor,
-                ),
-              ),
-              buildDivider(),
-              buildSettingsItem(
-                icon: Icons.history,
-                title: "Transaction History",
-                trailing:
-                    const Icon(Icons.chevron_right, color: AppStyles.textColor),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => TransactionHistoryPage(),
-                    ),
-                  );
-                },
-              ),
-              buildDivider(),
-              buildSettingsItem(
-                icon: Icons.description_outlined,
-                title: "Terms and Conditions",
-                trailing:
-                    const Icon(Icons.chevron_right, color: AppStyles.textColor),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => TermsAndConditionsPage(
-                        onAccept: () {
-                          print("Terms accepted");
-                        },
-                      ),
-                    ),
-                  );
-                },
-              ),
-              const SizedBox(height: 20),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  // Build individual settings items
-  Widget buildSettingsItem({
-    required IconData icon,
-    required String title,
-    required Widget trailing,
-    VoidCallback? onTap,
-  }) {
-    return ListTile(
-      leading: Icon(icon, color: AppStyles.secondaryColor, size: 28),
-      title: Text(
-        title,
-        style: AppStyles.bodyStyle.copyWith(
-          fontFamily: 'BalsamiqSans', // Body text and subtitles
-        ),
-      ),
-      trailing: trailing,
-      onTap: onTap,
-    );
-  }
-
-  // Divider styling
-  Widget buildDivider() {
-    return const Divider(
-      color: AppStyles.secondaryColor,
-      thickness: 1,
-      indent: 20,
-      endIndent: 20,
     );
   }
 }

@@ -1,9 +1,9 @@
 import 'package:babysitter/account-ratingandreviewpage-terms/privacypolicy.dart';
 import 'package:babysitter/account-ratingandreviewpage-terms/termspage.dart';
+import 'package:babysitter/home-paymentpage/dashboard.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:babysitter/home-paymentpage/dashboard.dart';
 
 class Registration extends StatefulWidget {
   const Registration({super.key});
@@ -26,6 +26,23 @@ class _RegistrationState extends State<Registration> {
   // Add variables to track checkbox states
   bool acceptTerms = false;
   bool acceptPrivacyPolicy = false;
+
+  @override
+  void initState() {
+    super.initState();
+    errorMessage = "This is an error";
+    isError = false;
+  }
+
+  @override
+  void dispose() {
+    // Dispose controllers to prevent memory leaks
+    nameController.dispose();
+    passwordController.dispose();
+    emailController.dispose();
+    phoneController.dispose();
+    super.dispose();
+  }
 
   Future<void> registerUser() async {
     try {
@@ -149,321 +166,217 @@ class _RegistrationState extends State<Registration> {
   }
 
   @override
-  void initState() {
-    errorMessage = "This is an error";
-    isError = false;
-    super.initState();
-  }
-
-  @override
-  void dispose() {
-    // Dispose controllers to prevent memory leaks
-    nameController.dispose();
-    passwordController.dispose();
-    emailController.dispose();
-    phoneController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final screenHeight = MediaQuery.of(context).size.height;
-
     return Scaffold(
-      body: Stack(
-        children: [
-          // Background Decorations
-          Positioned(
-            left: screenWidth * 0.2,
-            top: -screenHeight * 0.3,
-            child: Transform(
-              transform: Matrix4.identity()..rotateZ(0.60),
-              child: Container(
-                width: screenWidth * 2,
-                height: screenHeight * 2.5,
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment(0.00, -1.00),
-                    end: Alignment(0, 1),
-                    colors: [
-                      Color(0x00D9D9D9),
-                      Colors.white,
-                      Color(0xFFA43547),
+      backgroundColor: Color(0xFFF5F5F5), // Light Background color
+      body: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Back Button
+              IconButton(
+                icon: const Icon(Icons.arrow_back,
+                    color: Color(0xFF000000)), // Primary Text (Black)
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+              ),
+              const SizedBox(height: 20),
+              const Center(
+                child: CircleAvatar(
+                  radius: 40,
+                  backgroundColor: Color(0xFFC47F42), // Orange
+                  child: Icon(Icons.directions_walk,
+                      size: 40, color: Colors.white),
+                ),
+              ),
+              const SizedBox(height: 20),
+              const Center(
+                child: Text(
+                  "Create an account",
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF000000), // Primary Text (Black)
+                  ),
+                ),
+              ),
+              const SizedBox(height: 40),
+
+              // Full Name
+              const Text(
+                "Full name",
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF000000), // Primary Text (Black)
+                ),
+              ),
+              TextField(
+                controller: nameController,
+                decoration: InputDecoration(
+                  hintText: "Enter your full name",
+                  hintStyle: TextStyle(
+                      color: Color(0xFF7D7D7D)), // Secondary Text (Gray)
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(10.0)),
+                    borderSide:
+                        BorderSide(color: Color(0xFFE3C3A3)), // Beige border
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // Email
+              const Text("Email", style: TextStyle(color: Color(0xFF000000))),
+              TextField(
+                controller: emailController,
+                decoration: InputDecoration(
+                  hintText: "Enter your email",
+                  hintStyle: TextStyle(color: Color(0xFF7D7D7D)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(10.0)),
+                    borderSide: BorderSide(color: Color(0xFFE3C3A3)),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // Password
+              const Text("Password",
+                  style: TextStyle(color: Color(0xFF000000))),
+              TextField(
+                controller: passwordController,
+                obscureText: true,
+                decoration: InputDecoration(
+                  hintText: "Min 8 characters",
+                  hintStyle: TextStyle(color: Color(0xFF7D7D7D)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(10.0)),
+                    borderSide: BorderSide(color: Color(0xFFE3C3A3)),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // Phone Number
+              const Text("Phone number",
+                  style: TextStyle(color: Color(0xFF000000))),
+              TextField(
+                controller: phoneController,
+                decoration: InputDecoration(
+                  hintText: "Enter your phone number",
+                  hintStyle: TextStyle(color: Color(0xFF7D7D7D)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(10.0)),
+                    borderSide: BorderSide(color: Color(0xFFE3C3A3)),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // Role
+              const Text("Role", style: TextStyle(color: Color(0xFF000000))),
+              DropdownButtonFormField<String>(
+                value: selectedRole,
+                onChanged: (String? newValue) {
+                  setState(() {
+                    selectedRole = newValue;
+                  });
+                },
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(10.0)),
+                    borderSide: BorderSide(color: Color(0xFFE3C3A3)),
+                  ),
+                ),
+                items: <String>['Babysitter', 'Parent']
+                    .map<DropdownMenuItem<String>>((String value) {
+                  return DropdownMenuItem<String>(
+                    value: value,
+                    child: Text(value),
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 20),
+
+              // Terms and Privacy Policy Checkbox Section
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Checkbox(
+                            value: acceptTerms,
+                            onChanged: (bool? newValue) {
+                              setState(() {
+                                acceptTerms = newValue!;
+                              });
+                            },
+                          ),
+                          InkWell(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => TermsAndConditionsPage(
+                                    onAccept: () {
+                                      print("Terms Accepted");
+                                    },
+                                  ),
+                                ),
+                              );
+                            },
+                            child: const Text("I accept the Terms of Service",
+                                style: TextStyle(color: Color(0xFF7D7D7D))),
+                          ),
+                        ],
+                      ),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Checkbox(
+                            value: acceptPrivacyPolicy,
+                            onChanged: (bool? newValue) {
+                              setState(() {
+                                acceptPrivacyPolicy = newValue!;
+                              });
+                            },
+                          ),
+                          InkWell(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => PrivacyPolicyPage(
+                                    onAccept: () {
+                                      print("Privacy Policy Accepted");
+                                    },
+                                  ),
+                                ),
+                              );
+                            },
+                            child: const Text("I accept the Privacy Policy",
+                                style: TextStyle(color: Color(0xFF7D7D7D))),
+                          ),
+                        ],
+                      ),
                     ],
                   ),
                 ),
               ),
-            ),
-          ),
-          Positioned(
-            left: screenWidth * 0.4,
-            top: screenHeight * 0.4,
-            child: Transform(
-              transform: Matrix4.identity()..rotateZ(0.65),
-              child: Container(
-                width: screenWidth * 1.5,
-                height: screenHeight,
-                decoration: ShapeDecoration(
-                  color: const Color(0xFFE3838E),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(66),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          // Back Button
-          Positioned(
-            top: 40,
-            left: 15,
-            child: IconButton(
-              icon: const Icon(Icons.arrow_back),
-              onPressed: () {
-                Navigator.pop(context);
-              },
-            ),
-          ),
-          // Centered content with form fields
-          Center(
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Name Text Field
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    child: SizedBox(
-                      width: screenWidth * 0.8,
-                      child: TextFormField(
-                        controller: nameController,
-                        decoration: const InputDecoration(
-                          labelText: 'Name',
-                          labelStyle: TextStyle(
-                            color: Color(0xFFE3838E),
-                            fontSize: 16,
-                            fontFamily: 'BalsamiqSans',
-                            fontWeight: FontWeight.w400,
-                          ),
-                          enabledBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(
-                              color: Color(0xFFF48FB1),
-                            ),
-                          ),
-                          prefixIcon: Icon(
-                            Icons.person,
-                            color: Color(0xFFF48FB1),
-                            size: 30,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  // Password Text Field
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    child: SizedBox(
-                      width: screenWidth * 0.8,
-                      child: TextFormField(
-                        controller: passwordController,
-                        decoration: const InputDecoration(
-                          labelText: 'Password',
-                          labelStyle: TextStyle(
-                            color: Color(0xFFE3838E),
-                            fontSize: 16,
-                            fontFamily: 'BalsamiqSans',
-                            fontWeight: FontWeight.w400,
-                          ),
-                          enabledBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(
-                              color: Color(0xFFF48FB1),
-                            ),
-                          ),
-                          prefixIcon: Icon(
-                            Icons.lock,
-                            color: Color(0xFFF48FB1),
-                            size: 30,
-                          ),
-                        ),
-                        obscureText: true,
-                      ),
-                    ),
-                  ),
-                  // Email Text Field
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    child: SizedBox(
-                      width: screenWidth * 0.8,
-                      child: TextFormField(
-                        controller: emailController,
-                        decoration: const InputDecoration(
-                          labelText: 'Email Address',
-                          labelStyle: TextStyle(
-                            color: Color(0xFFE3838E),
-                            fontSize: 16,
-                            fontFamily: 'BalsamiqSans',
-                            fontWeight: FontWeight.w400,
-                          ),
-                          enabledBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(
-                              color: Color(0xFFF48FB1),
-                            ),
-                          ),
-                          prefixIcon: Icon(
-                            Icons.email,
-                            color: Color(0xFFF48FB1),
-                            size: 30,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  // Phone Number Text Field
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    child: SizedBox(
-                      width: screenWidth * 0.8,
-                      child: TextFormField(
-                        controller: phoneController,
-                        decoration: const InputDecoration(
-                          labelText: 'Phone Number',
-                          labelStyle: TextStyle(
-                            color: Color(0xFFE3838E),
-                            fontSize: 16,
-                            fontFamily: 'BalsamiqSans',
-                            fontWeight: FontWeight.w400,
-                          ),
-                          enabledBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(
-                              color: Color(0xFFF48FB1),
-                            ),
-                          ),
-                          prefixIcon: Icon(
-                            Icons.phone,
-                            color: Color(0xFFF48FB1),
-                            size: 30,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  // Role Dropdown Button
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    child: SizedBox(
-                      width: screenWidth * 0.8,
-                      child: DropdownButtonFormField<String>(
-                        value: selectedRole,
-                        onChanged: (String? newValue) {
-                          setState(() {
-                            selectedRole = newValue;
-                          });
-                        },
-                        decoration: const InputDecoration(
-                          labelText: 'Select Role',
-                          labelStyle: TextStyle(
-                            color: Color(0xFFE3838E),
-                            fontSize: 16,
-                            fontFamily: 'BalsamiqSans',
-                            fontWeight: FontWeight.w400,
-                          ),
-                          enabledBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(
-                              color: Color(0xFFF48FB1),
-                            ),
-                          ),
-                        ),
-                        items: <String>['Babysitter', 'Parent']
-                            .map<DropdownMenuItem<String>>((String value) {
-                          return DropdownMenuItem<String>(
-                            value: value,
-                            child: Text(value),
-                          );
-                        }).toList(),
-                      ),
-                    ),
-                  ),
-                  // Terms and Privacy Policy Checkbox Section
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    child: Center(
-                      // Center the column containing the checkboxes
-                      child: Column(
-                        mainAxisSize: MainAxisSize
-                            .min, // Minimize the height of the Column
-                        children: [
-                          Row(
-                            mainAxisSize: MainAxisSize
-                                .min, // Minimize the width of the Row
-                            children: [
-                              Checkbox(
-                                value: acceptTerms,
-                                onChanged: (bool? newValue) {
-                                  setState(() {
-                                    acceptTerms = newValue!;
-                                  });
-                                },
-                              ),
-                              InkWell(
-                                onTap: () {
-                                  // Navigate to the Terms and Conditions page when tapped
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                          TermsAndConditionsPage(
-                                        onAccept: () {
-                                          // Handle any action when terms are accepted, if needed
-                                          print("Terms Accepted");
-                                        },
-                                      ),
-                                    ),
-                                  );
-                                },
-                                child:
-                                    const Text("I accept the Terms of Service"),
-                              ),
-                            ],
-                          ),
-                          Row(
-                            mainAxisSize: MainAxisSize
-                                .min, // Minimize the width of the Row
-                            children: [
-                              Checkbox(
-                                value: acceptPrivacyPolicy,
-                                onChanged: (bool? newValue) {
-                                  setState(() {
-                                    acceptPrivacyPolicy = newValue!;
-                                  });
-                                },
-                              ),
-                              InkWell(
-                                onTap: () {
-                                  // Navigate to the Privacy Policy page when tapped
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => PrivacyPolicyPage(
-                                        onAccept: () {
-                                          // Handle any action when privacy policy is accepted, if needed
-                                          print("Privacy Policy Accepted");
-                                        },
-                                      ),
-                                    ),
-                                  );
-                                },
-                                child:
-                                    const Text("I accept the Privacy Policy"),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
 
-                  // Register Button
-                  ElevatedButton(
+              // Register Button
+              Center(
+                child: SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
                     onPressed: () {
                       if (acceptTerms && acceptPrivacyPolicy) {
                         registerUser();
@@ -477,15 +390,48 @@ class _RegistrationState extends State<Registration> {
                       }
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFE3838E),
+                      backgroundColor: Color(0xFFC47F42), // Orange Button color
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10.0),
+                      ),
                     ),
-                    child: const Text("Register"),
+                    child: const Text(
+                      "Register",
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.white,
+                      ),
+                    ),
                   ),
-                ],
+                ),
               ),
-            ),
+              const SizedBox(height: 20),
+
+              // Log In
+              Center(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text("Already have an account? "),
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.pop(context);
+                      },
+                      child: const Text(
+                        "Log in",
+                        style: TextStyle(
+                          color: Color(0xFFC47F42), // Orange color for login
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

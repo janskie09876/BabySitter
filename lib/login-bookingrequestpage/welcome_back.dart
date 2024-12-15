@@ -1,6 +1,7 @@
 import 'package:babysitter/home-paymentpage/dashboard.dart';
 import 'package:babysitter/home-paymentpage/dashboard_nanny.dart';
 import 'package:babysitter/register-settingspage/changepass.dart';
+import 'package:babysitter/register-settingspage/recoverpassword.dart';
 import 'package:babysitter/register-settingspage/registration.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -20,7 +21,6 @@ class _WelcomeBackState extends State<WelcomeBack> {
 
   @override
   void dispose() {
-    // Dispose controllers to prevent memory leaks
     emailController.dispose();
     passwordController.dispose();
     super.dispose();
@@ -28,69 +28,51 @@ class _WelcomeBackState extends State<WelcomeBack> {
 
   Future<void> loginUser() async {
     try {
-      // Authenticate user with Firebase
       UserCredential userCredential =
           await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: emailController.text.trim(),
         password: passwordController.text.trim(),
       );
 
-      // Get the logged-in user's ID
       User user = userCredential.user!;
 
-      // Retrieve user data from both the "parents" and "babysitters" collections
       DocumentSnapshot userDocParent = await FirebaseFirestore.instance
-          .collection('parents') // Check the parents collection first
+          .collection('parents')
           .doc(user.uid)
           .get();
 
       DocumentSnapshot userDocBabysitter = await FirebaseFirestore.instance
-          .collection('babysitters') // Check the babysitters collection
+          .collection('babysitters')
           .doc(user.uid)
           .get();
 
       if (userDocParent.exists) {
-        // User is found in the "parents" collection
         String role = userDocParent['role'];
-
-        // Navigate based on the role
         if (role == "Parent") {
-          // Navigate to the Parent Dashboard
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(
-                builder: (context) =>
-                    Dashboard()), // Replace with actual Parent Dashboard
+            MaterialPageRoute(builder: (context) => Dashboard()),
           );
         } else {
-          // Handle unexpected role
           setState(() {
             isError = true;
             errorMessage = "Role mismatch for Parent user.";
           });
         }
       } else if (userDocBabysitter.exists) {
-        // User is found in the "babysitters" collection
         String role = userDocBabysitter['role'];
-
-        // Navigate based on the role
         if (role == "Babysitter") {
-          // Navigate to the Babysitter Dashboard
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(
-              builder: (context) => DashboardNanny(),
-            ), // Replace with actual Babysitter Dashboard
+            MaterialPageRoute(builder: (context) => DashboardNanny()),
           );
         } else {
-          // Handle unexpected role
           setState(() {
             isError = true;
             errorMessage = "Role mismatch for Babysitter user.";
           });
         }
       } else {
-        // User is not found in either collection
         setState(() {
           isError = true;
           errorMessage =
@@ -100,7 +82,6 @@ class _WelcomeBackState extends State<WelcomeBack> {
     } on FirebaseAuthException catch (e) {
       setState(() {
         isError = true;
-        // Check for specific error codes
         if (e.code == 'invalid-email') {
           errorMessage = 'The email address format is invalid.';
         } else if (e.code == 'user-not-found') {
@@ -125,117 +106,129 @@ class _WelcomeBackState extends State<WelcomeBack> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFFDEDE),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFFFFDEDE),
-        elevation: 0, // Remove shadow
-      ),
+      backgroundColor: Color(0xFFF5F5F5), // Light Background color
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              const SizedBox(height: 40),
-              const Text(
-                "Hello!",
-                style: TextStyle(
-                  fontFamily: 'Baloo', // Heading font
-                  fontSize: 36.0,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFFE3838E),
-                ),
+              const SizedBox(height: 80),
+              const CircleAvatar(
+                radius: 40,
+                backgroundColor:
+                    Color(0xFFC47F42), // Orange background for avatar
+                child:
+                    Icon(Icons.directions_walk, size: 40, color: Colors.white),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 20),
               const Text(
-                "Sign in with your account",
+                "Welcome back!",
                 style: TextStyle(
-                  fontFamily: 'Balsamiq Sans', // Subtitle font
-                  fontSize: 16.0,
-                  color: Colors.black,
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF000000), // Primary Text (Black)
                 ),
               ),
               const SizedBox(height: 20),
 
-              // Show error message
-              if (isError)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 10),
-                  child: Text(
-                    errorMessage,
-                    style: const TextStyle(
-                      color: Colors.red,
-                      fontSize: 14,
-                    ),
+              // Email Label
+              const Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  "Email",
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF000000), // Primary Text (Black)
                   ),
                 ),
+              ),
+              const SizedBox(height: 5),
 
               // Email Field
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(8.0),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.withOpacity(0.3),
-                      spreadRadius: 1,
-                      blurRadius: 6,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: TextFormField(
-                  controller: emailController,
-                  decoration: const InputDecoration(
-                    contentPadding: EdgeInsets.symmetric(horizontal: 16.0),
-                    border: InputBorder.none,
-                    hintText: 'Email',
-                    hintStyle: TextStyle(
-                      fontFamily: 'Balsamiq Sans', // Subtitle font
-                    ),
+              TextFormField(
+                controller: emailController,
+                decoration: InputDecoration(
+                  labelText: 'Enter your email',
+                  labelStyle:
+                      TextStyle(color: Color(0xFF000000)), // Primary Text color
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10.0),
+                    borderSide: BorderSide(
+                        color: Color(0xFFE3C3A3)), // Beige border color
                   ),
-                  keyboardType: TextInputType.emailAddress,
                 ),
+                keyboardType: TextInputType.emailAddress,
+                style: TextStyle(
+                    color: Color(0xFF000000)), // Primary Text in input
               ),
               const SizedBox(height: 20),
 
-              // Password Field
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(8.0),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.withOpacity(0.3),
-                      spreadRadius: 1,
-                      blurRadius: 6,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
+              // Password Label
+              const Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  "Password",
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF000000), // Primary Text (Black)
+                  ),
                 ),
-                child: TextFormField(
-                  controller: passwordController,
-                  obscureText: !_isPasswordVisible,
-                  decoration: InputDecoration(
-                    contentPadding:
-                        const EdgeInsets.only(left: 16.0, top: 12.0),
-                    border: InputBorder.none,
-                    hintText: 'Password',
-                    hintStyle: const TextStyle(
-                      fontFamily: 'Balsamiq Sans', // Subtitle font
+              ),
+              const SizedBox(height: 5),
+
+              // Password Field
+              TextFormField(
+                controller: passwordController,
+                obscureText: !_isPasswordVisible,
+                decoration: InputDecoration(
+                  labelText: 'Enter your password',
+                  labelStyle:
+                      TextStyle(color: Color(0xFF000000)), // Primary Text color
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10.0),
+                    borderSide: BorderSide(
+                        color: Color(0xFFE3C3A3)), // Beige border color
+                  ),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _isPasswordVisible
+                          ? Icons.visibility
+                          : Icons.visibility_off,
+                      color:
+                          Color(0xFF000000), // Primary Text (Black) icon color
                     ),
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _isPasswordVisible
-                            ? Icons.visibility
-                            : Icons.visibility_off,
-                        color: Colors.grey,
+                    onPressed: () {
+                      setState(() {
+                        _isPasswordVisible = !_isPasswordVisible;
+                      });
+                    },
+                  ),
+                ),
+                style: TextStyle(
+                    color: Color(0xFF000000)), // Primary Text in input
+              ),
+              const SizedBox(height: 20),
+
+              // Forgot Password
+              Align(
+                alignment: Alignment.centerRight,
+                child: GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => RecoverPassword(),
                       ),
-                      onPressed: () {
-                        setState(() {
-                          _isPasswordVisible = !_isPasswordVisible;
-                        });
-                      },
+                    );
+                  },
+                  child: const Text(
+                    "Forgot password?",
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Color(0xFFC47F42), // Orange for link
                     ),
                   ),
                 ),
@@ -243,28 +236,21 @@ class _WelcomeBackState extends State<WelcomeBack> {
               const SizedBox(height: 40),
 
               // Login Button
-              Container(
+              SizedBox(
                 width: double.infinity,
-                height: 48.0,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE3838E),
-                  borderRadius: BorderRadius.circular(6.0),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.withOpacity(0.3),
-                      spreadRadius: 1,
-                      blurRadius: 6,
-                      offset: const Offset(0, 4),
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Color(0xFFC47F42), // Orange button color
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10.0),
                     ),
-                  ],
-                ),
-                child: TextButton(
-                  onPressed: loginUser, // Call login method
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                  onPressed: loginUser,
                   child: const Text(
-                    'Login',
+                    'Log in',
                     style: TextStyle(
-                      fontFamily: 'Poppins', // Number font
-                      fontSize: 18.0,
+                      fontSize: 16,
                       color: Colors.white,
                     ),
                   ),
@@ -272,77 +258,32 @@ class _WelcomeBackState extends State<WelcomeBack> {
               ),
               const SizedBox(height: 20),
 
-              // Forgot Password
+              // Sign Up Option
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const Text(
-                    "Forgot your Password? ",
+                    "Are you new here? ",
                     style: TextStyle(
-                      fontFamily: 'Balsamiq Sans', // Subtitle font
-                      fontSize: 16.0,
-                      color: Colors.black,
+                      color: Color(0xFF000000), // Primary Text (Black)
                     ),
                   ),
                   GestureDetector(
                     onTap: () {
-                      // Navigate to Change Password page
                       Navigator.push(
                         context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              const Changepass(title: 'Change Password'),
-                        ),
+                        MaterialPageRoute(builder: (context) => Registration()),
                       );
                     },
                     child: const Text(
-                      "Reset here",
+                      "Create account",
                       style: TextStyle(
-                        fontFamily: 'Balsamiq Sans', // Subtitle font
-                        fontSize: 16.0,
-                        color: Color(0xFFFF7A8F),
+                        color: Color(0xFFC47F42), // Orange for link
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                   ),
                 ],
-              ),
-              const SizedBox(height: 30),
-
-              // Sign Up Button
-              Center(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text(
-                      "Don't have an account? ",
-                      style: TextStyle(
-                        fontFamily: 'Balsamiq Sans', // Subtitle font
-                        fontSize: 16.0,
-                        color: Colors.black,
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: () {
-                        // Navigate to the Registration page
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const Registration(),
-                          ),
-                        );
-                      },
-                      child: const Text(
-                        "Sign Up",
-                        style: TextStyle(
-                          fontFamily: 'Baloo', // Heading font
-                          fontSize: 16.0,
-                          color: Color(0xFFE3838E),
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
               ),
             ],
           ),
