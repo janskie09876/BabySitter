@@ -12,9 +12,34 @@ import 'package:babysitter/notifications-stylepage/styles.dart';
 import 'package:babysitter/pages/viewmap1.dart';
 import 'package:babysitter/register-settingspage/settings.dart'
     as my_settings; // Alias for Settings
+import 'package:babysitter/register-settingspage/settings.dart';
 import 'package:cloud_firestore/cloud_firestore.dart'; // Import Firestore
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+
+// Define a custom color palette
+class AppColors {
+  // Updated color palette
+  static const Color primaryColor =
+      Color(0xFFC47F42); // Orange for Buttons and accents
+  static const Color lightBackground =
+      Color(0xFFF5F5F5); // Light Background color
+  static const Color darkBackground =
+      Color(0xFF1E1E1E); // Dark Background for emphasis
+  static const Color beige = Color(0xFFE3C3A3); // Beige for soft highlights
+  static const Color coffeeBrown =
+      Color(0xFF51331A); // Coffee Brown for headlines
+  static const Color lightCoffeeBrown =
+      Color(0xFF7B5B42); // Light Coffee Brown for borders
+  static const Color blackColor = Color(0xFF000000); // Black for primary text
+  static const Color grayColor = Color(0xFF7D7D7D); // Gray for secondary text
+  static const Color successColor =
+      Color(0xFF4CAF50); // Green for success messages
+  static const Color warningColor = Color(0xFFFBC02D); // Yellow for warnings
+  static const Color whiteColor =
+      Color(0xFFFFFFFF); // White for background and text highlights
+  static const Color redColor = Color(0xFFFF0000); // Red for notifications
+}
 
 class Dashboard extends StatefulWidget {
   @override
@@ -51,7 +76,7 @@ class _DashboardState extends State<Dashboard> {
         return Dialog(
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12.0),
-            side: BorderSide(color: Colors.pink.shade200, width: 2),
+            side: BorderSide(color: AppColors.lightCoffeeBrown, width: 2),
           ),
           child: FutureBuilder<String>(
             future: getCurrentUserName(), // Fetch the user's name dynamically
@@ -80,8 +105,8 @@ class _DashboardState extends State<Dashboard> {
                       title: Text(
                         userName, // Display the fetched user name
                         style: TextStyle(
-                          fontFamily: 'Baloo',
                           fontWeight: FontWeight.bold,
+                          color: Color(0xFF000000), // Coffee Brown for name
                         ),
                       ),
                     ),
@@ -119,8 +144,8 @@ class _DashboardState extends State<Dashboard> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => my_settings.Settings(
-                              title: 'Settings'), // Use alias here
+                          builder: (context) =>
+                              SettingsPage(), // Use alias here
                         ),
                       );
                     }),
@@ -155,11 +180,11 @@ class _DashboardState extends State<Dashboard> {
   Widget _buildMenuItem(
       BuildContext context, IconData icon, String title, VoidCallback onTap) {
     return ListTile(
-      leading: Icon(icon),
+      leading: Icon(icon, color: AppColors.primaryColor),
       title: Text(
         title,
         style: TextStyle(
-          fontFamily: 'Baloo',
+          color: Color(0xFF000000),
         ),
       ),
       onTap: onTap,
@@ -175,32 +200,32 @@ class _DashboardState extends State<Dashboard> {
           title: const Text(
             'Todd Care',
             style: TextStyle(
-              fontFamily: 'Baloo',
               fontSize: 24,
               fontWeight: FontWeight.bold,
+              color: AppColors.whiteColor, // White text for header
             ),
           ),
           centerTitle: true,
-          backgroundColor: AppStyles.primaryColor,
+          backgroundColor: AppColors.primaryColor,
           elevation: 0,
           actions: [
             IconButton(
-              icon: Icon(Icons.menu, color: AppStyles.textColor),
+              icon: Icon(Icons.menu, color: AppColors.whiteColor),
               onPressed: () => _showMenuDialog(context),
             ),
           ],
         ),
         body: Padding(
-          padding: AppStyles.defaultPadding,
+          padding: const EdgeInsets.all(16.0),
           child: Column(
             children: [
               Container(
                 width: double.infinity,
                 height: 50,
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: AppColors.whiteColor,
                   borderRadius: BorderRadius.circular(30),
-                  border: Border.all(color: Colors.black),
+                  border: Border.all(color: AppColors.lightCoffeeBrown),
                 ),
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -220,6 +245,7 @@ class _DashboardState extends State<Dashboard> {
                       },
                       icon: const Icon(
                         Icons.search_rounded,
+                        color: AppColors.primaryColor, // Orange search icon
                       ),
                     ),
                   ],
@@ -233,9 +259,9 @@ class _DashboardState extends State<Dashboard> {
         floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
         floatingActionButton: CircleAvatar(
           radius: 30,
-          backgroundColor: AppStyles.secondaryColor,
+          backgroundColor: AppColors.primaryColor,
           child: IconButton(
-            icon: const Icon(Icons.public, color: AppStyles.whiteColor),
+            icon: const Icon(Icons.public, color: AppColors.whiteColor),
             onPressed: () {
               Navigator.push(
                 context,
@@ -249,13 +275,14 @@ class _DashboardState extends State<Dashboard> {
         bottomNavigationBar: BottomAppBar(
           shape: const CircularNotchedRectangle(),
           notchMargin: 8.0,
-          color: AppStyles.primaryColor,
+          color: AppColors.primaryColor,
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Expanded(
                 child: IconButton(
-                  icon: const Icon(Icons.home, size: 30),
+                  icon: const Icon(Icons.home,
+                      size: 30, color: AppColors.whiteColor),
                   onPressed: () {
                     Navigator.push(
                       context,
@@ -268,7 +295,8 @@ class _DashboardState extends State<Dashboard> {
               ),
               Expanded(
                 child: IconButton(
-                  icon: const Icon(Icons.chat_bubble_outline, size: 30),
+                  icon: const Icon(Icons.chat_bubble_outline,
+                      size: 30, color: AppColors.whiteColor),
                   onPressed: () {
                     Navigator.push(
                       context,
@@ -302,7 +330,8 @@ class _DashboardState extends State<Dashboard> {
                           Clip.none, // Allows the badge to overflow the bounds
                       children: [
                         IconButton(
-                          icon: const Icon(Icons.notifications_none, size: 30),
+                          icon: const Icon(Icons.notifications_none,
+                              size: 30, color: AppColors.whiteColor),
                           onPressed: () {
                             Navigator.push(
                               context,
@@ -324,13 +353,13 @@ class _DashboardState extends State<Dashboard> {
                             child: Container(
                               padding: const EdgeInsets.all(4),
                               decoration: BoxDecoration(
-                                color: Colors.red,
+                                color: AppColors.redColor,
                                 shape: BoxShape.circle,
                               ),
                               child: Text(
                                 '$unreadCount',
                                 style: const TextStyle(
-                                  color: Colors.white,
+                                  color: AppColors.whiteColor,
                                   fontSize: 12,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -344,7 +373,8 @@ class _DashboardState extends State<Dashboard> {
               ),
               Expanded(
                 child: IconButton(
-                  icon: const Icon(Icons.person_outline, size: 30),
+                  icon: const Icon(Icons.person_outline,
+                      size: 30, color: AppColors.whiteColor),
                   onPressed: () {
                     Navigator.push(
                       context,

@@ -1,58 +1,89 @@
-import 'package:babysitter/notifications-stylepage/styles.dart';
 import 'package:flutter/material.dart';
+
+class AppColors {
+  static const Color primaryColor = Color(0xFFC47F42); // Orange
+  static const Color lightBackground = Color(0xFFF5F5F5); // Light background
+  static const Color darkBackground = Color(0xFF1E1E1E); // Dark background
+  static const Color beige = Color(0xFFE3C3A3); // Beige
+  static const Color coffeeBrown = Color(0xFF51331A); // Coffee Brown
+  static const Color lightCoffeeBrown = Color(0xFF7B5B42); // Light Coffee Brown
+  static const Color blackColor = Color(0xFF000000); // Black
+  static const Color grayColor = Color(0xFF7D7D7D); // Gray
+  static const Color successColor = Color(0xFF4CAF50); // Green
+  static const Color warningColor = Color(0xFFFBC02D); // Yellow
+  static const Color whiteColor = Color(0xFFFFFFFF); // White
+  static const Color redColor = Color(0xFFFF0000); // Red
+}
 
 class FAQPage extends StatelessWidget {
   const FAQPage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    // Get the screen width
+    double screenWidth = MediaQuery.of(context).size.width;
+
     return Scaffold(
-      backgroundColor: AppStyles.backgroundColor,
+      backgroundColor: AppColors.lightBackground,
       appBar: AppBar(
-        title: Text(''),
+        title: const Text(''),
         elevation: 0,
-        backgroundColor: AppStyles.backgroundColor,
+        backgroundColor: AppColors.lightBackground,
         actions: [
           IconButton(
-            icon: Icon(Icons.close, color: AppStyles.textColor),
+            icon: Icon(Icons.close, color: AppColors.blackColor),
             onPressed: () => Navigator.of(context).pop(),
           ),
         ],
       ),
       body: Padding(
-        padding: AppStyles.defaultPadding,
+        padding: const EdgeInsets.all(16.0), // Default padding
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Responsive Title Section
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
                   "Frequently Asked Questions",
                   style: TextStyle(
-                    fontFamily: 'Baloo', // Used for headings and titles
-                    fontSize: 24,
+                    fontSize: screenWidth > 600
+                        ? 24
+                        : 20, // Adjust font size based on screen width
                     fontWeight: FontWeight.bold,
-                    color: AppStyles.secondaryColor,
+                    color: AppColors.coffeeBrown,
                   ),
-                  textAlign: TextAlign.center, // Centering the text
+                  textAlign: TextAlign.center,
                 ),
               ],
             ),
             SizedBox(height: 20),
             // FAQ Card - Application and Requirements
             Container(
-              padding: AppStyles.defaultPadding,
-              decoration: AppStyles.cardDecoration,
+              padding: const EdgeInsets.all(16.0),
+              decoration: BoxDecoration(
+                color: AppColors.whiteColor,
+                borderRadius: BorderRadius.circular(8),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black26,
+                    blurRadius: 6,
+                    offset: Offset(0, 2),
+                  ),
+                ],
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     "Application and Requirements",
                     style: TextStyle(
-                      fontFamily: 'Baloo', // Used for headings and titles
-                      fontSize: 18,
+                      fontSize: screenWidth > 600
+                          ? 18
+                          : 16, // Adjust font size for larger screens
                       fontWeight: FontWeight.bold,
-                      color: AppStyles.textColor,
+                      color: AppColors.blackColor,
                     ),
                   ),
                   SizedBox(height: 20),
@@ -73,18 +104,29 @@ class FAQPage extends StatelessWidget {
             SizedBox(height: 24),
             // FAQ Card - For Parents
             Container(
-              padding: AppStyles.defaultPadding,
-              decoration: AppStyles.cardDecoration,
+              padding: const EdgeInsets.all(16.0),
+              decoration: BoxDecoration(
+                color: AppColors.whiteColor,
+                borderRadius: BorderRadius.circular(8),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black26,
+                    blurRadius: 6,
+                    offset: Offset(0, 2),
+                  ),
+                ],
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     "For Parents",
                     style: TextStyle(
-                      fontFamily: 'Baloo', // Used for headings and titles
-                      fontSize: 18,
+                      fontSize: screenWidth > 600
+                          ? 18
+                          : 16, // Adjust font size for larger screens
                       fontWeight: FontWeight.bold,
-                      color: AppStyles.textColor,
+                      color: AppColors.blackColor,
                     ),
                   ),
                   SizedBox(height: 10),
@@ -112,6 +154,9 @@ class FAQItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Get the screen width for responsiveness
+    double screenWidth = MediaQuery.of(context).size.width;
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 12.0),
       child: Column(
@@ -120,18 +165,21 @@ class FAQItem extends StatelessWidget {
           Text(
             question,
             style: TextStyle(
-              fontFamily: 'Baloo', // Used for headings and titles
-              fontSize: 16,
+              fontSize: screenWidth > 600
+                  ? 16
+                  : 14, // Adjust font size for larger screens
               fontWeight: FontWeight.bold,
+              color: AppColors.coffeeBrown,
             ),
           ),
           SizedBox(height: 4),
           Text(
             answer,
             style: TextStyle(
-              fontFamily: 'Balsamiq Sans', // Used for body and subtitles
-              fontSize: 14,
-              color: Colors.grey,
+              fontSize: screenWidth > 600
+                  ? 14
+                  : 12, // Adjust font size for larger screens
+              color: AppColors.grayColor,
             ),
           ),
         ],
