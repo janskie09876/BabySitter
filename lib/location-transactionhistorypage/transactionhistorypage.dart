@@ -2,6 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:babysitter/notifications-stylepage/styles.dart';
 import 'transaction_detail_page.dart';
 
+class AppColors {
+  static const Color primaryColor = Color(0xFFC47F42); // Orange
+  static const Color lightBackground = Color(0xFFF5F5F5); // Light background
+  static const Color beige = Color(0xFFE3C3A3); // Beige for highlights
+  static const Color coffeeBrown = Color(0xFF51331A); // Coffee Brown
+  static const Color lightCoffeeBrown = Color(0xFF7B5B42); // Light Coffee Brown
+  static const Color blackColor = Color(0xFF000000); // Black text
+  static const Color grayColor = Color(0xFF7D7D7D); // Gray for secondary text
+  static const Color whiteColor = Color(0xFFFFFFFF); // White
+}
+
 class TransactionHistoryPage extends StatefulWidget {
   const TransactionHistoryPage({super.key});
 
@@ -79,9 +90,10 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
         appBar: AppBar(
           title: const Text('Transaction History'),
           backgroundColor:
-              AppStyles.primaryColor, // Use primaryColor from AppStyles
+              AppColors.primaryColor, // Use primaryColor from AppColors
           elevation: 0,
-          foregroundColor: Colors.black,
+          foregroundColor:
+              AppColors.blackColor, // Use blackColor from AppColors
           bottom: TabBar(
             onTap: (index) {
               String newFilter = 'All';
@@ -102,13 +114,14 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
           ),
         ),
         body: Container(
-          color: AppStyles.primaryColor, // Use primaryColor from AppStyles
+          color:
+              AppColors.lightBackground, // Use lightBackground from AppColors
           child: Column(
             children: [
               Expanded(
                 child: ListView.builder(
-                  padding: AppStyles
-                      .defaultPadding, // Use defaultPadding from AppStyles
+                  padding: const EdgeInsets.all(
+                      16.0), // Padding can also be adjusted here
                   itemCount: displayedTransactions.length,
                   itemBuilder: (context, index) {
                     final transaction = displayedTransactions[index];
@@ -159,8 +172,14 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
                           .toList();
                     });
                   },
-                  style: AppStyles
-                      .primaryButtonStyle, // Use primaryButtonStyle from AppStyles
+                  style: ElevatedButton.styleFrom(
+                    foregroundColor: AppColors.whiteColor,
+                    backgroundColor:
+                        AppColors.primaryColor, // Text color for button
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12.0),
+                    ),
+                  ),
                   child: const Text('Load More'),
                 ),
             ],
@@ -195,11 +214,13 @@ class TransactionCard extends StatelessWidget {
                 Row(
                   children: [
                     CircleAvatar(
-                      backgroundColor: const Color(0xFFF6A5A5),
+                      backgroundColor:
+                          AppColors.beige, // Use beige from AppColors
                       radius: 20,
                       child: Icon(
                         transaction.icon,
-                        color: Colors.white,
+                        color: AppColors
+                            .whiteColor, // Use whiteColor from AppColors
                         size: 20,
                       ),
                     ),
@@ -209,15 +230,19 @@ class TransactionCard extends StatelessWidget {
                       children: [
                         Text(
                           transaction.type,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 16,
-                            color: Color(0xFFEA7A6D),
+                            color: AppColors
+                                .coffeeBrown, // Use coffeeBrown from AppColors
                           ),
                         ),
                         Text(
                           'From ${transaction.from}',
-                          style: const TextStyle(fontSize: 14),
+                          style: TextStyle(
+                              fontSize: 14,
+                              color: AppColors
+                                  .grayColor), // Use grayColor from AppColors
                         ),
                       ],
                     ),
@@ -228,9 +253,11 @@ class TransactionCard extends StatelessWidget {
                   children: [
                     Text(
                       '₱ ${transaction.amount.toStringAsFixed(0)}',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
+                        color: AppColors
+                            .blackColor, // Use blackColor from AppColors
                       ),
                     ),
                     Container(
@@ -244,8 +271,9 @@ class TransactionCard extends StatelessWidget {
                       ),
                       child: Text(
                         transaction.status,
-                        style: const TextStyle(
-                          color: Colors.white,
+                        style: TextStyle(
+                          color: AppColors
+                              .whiteColor, // Use whiteColor from AppColors
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -260,7 +288,10 @@ class TransactionCard extends StatelessWidget {
               children: [
                 Text(
                   transaction.date,
-                  style: const TextStyle(fontSize: 12),
+                  style: TextStyle(
+                      fontSize: 12,
+                      color:
+                          AppColors.grayColor), // Use grayColor from AppColors
                 ),
               ],
             ),

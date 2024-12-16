@@ -1,6 +1,18 @@
+import 'package:babysitter/home-paymentpage/dashboard.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+
+class AppColors {
+  static const Color primaryColor = Color(0xFFC47F42); // Orange
+  static const Color lightBackground = Color(0xFFF5F5F5); // Light background
+  static const Color beige = Color(0xFFE3C3A3); // Beige for highlights
+  static const Color coffeeBrown = Color(0xFF51331A); // Coffee Brown
+  static const Color lightCoffeeBrown = Color(0xFF7B5B42); // Light Coffee Brown
+  static const Color blackColor = Color(0xFF000000); // Black text
+  static const Color grayColor = Color(0xFF7D7D7D); // Gray for secondary text
+  static const Color whiteColor = Color(0xFFFFFFFF); // White
+}
 
 class BabysitterRatingForm extends StatefulWidget {
   const BabysitterRatingForm({Key? key}) : super(key: key);
@@ -22,7 +34,6 @@ class _BabysitterRatingFormState extends State<BabysitterRatingForm> {
     _fetchCurrentUserBooking();
   }
 
-  /// Fetch the current user's booking document
   Future<void> _fetchCurrentUserBooking() async {
     try {
       final currentUserId = FirebaseAuth.instance.currentUser?.uid;
@@ -32,7 +43,6 @@ class _BabysitterRatingFormState extends State<BabysitterRatingForm> {
         return;
       }
 
-      // Query the bookings collection where user1 matches the current user
       final bookingSnapshot = await FirebaseFirestore.instance
           .collection('bookings')
           .where('user1', isEqualTo: currentUserId)
@@ -41,13 +51,10 @@ class _BabysitterRatingFormState extends State<BabysitterRatingForm> {
 
       if (bookingSnapshot.docs.isNotEmpty) {
         final bookingDoc = bookingSnapshot.docs.first;
-        print(
-            'Booking document data: ${bookingDoc.data()}'); // Log document data
         bookingId = bookingDoc.id;
-        babysitterId = bookingDoc.data()?['user2']; // Babysitter's ID
+        babysitterId = bookingDoc.data()?['user2'];
 
         if (babysitterId != null) {
-          // Fetch babysitter's name from the babysitters collection
           final babysitterDoc = await FirebaseFirestore.instance
               .collection('babysitters')
               .doc(babysitterId)
@@ -56,7 +63,7 @@ class _BabysitterRatingFormState extends State<BabysitterRatingForm> {
           if (babysitterDoc.exists) {
             setState(() {
               nannyName = babysitterDoc.data()?['name'] ?? 'Unknown';
-              parentName = 'You'; // Current user's name (static for now)
+              parentName = 'You';
             });
           } else {
             setState(() {
@@ -105,10 +112,8 @@ class _BabysitterRatingFormState extends State<BabysitterRatingForm> {
     };
 
     try {
-      // Add the rating to the ratings collection
       await FirebaseFirestore.instance.collection('ratings').add(ratingData);
 
-      // Update babysitter's ratings in the babysitters collection
       final babysitterRef = FirebaseFirestore.instance
           .collection('babysitters')
           .doc(babysitterId);
@@ -117,7 +122,6 @@ class _BabysitterRatingFormState extends State<BabysitterRatingForm> {
         final babysitterDoc = await transaction.get(babysitterRef);
 
         if (babysitterDoc.exists) {
-          // Update the babysitter's average rating
           final currentRating = babysitterDoc.data()?['averageRating'] ?? 0.0;
           final ratingCount = babysitterDoc.data()?['ratingCount'] ?? 0;
 
@@ -130,7 +134,6 @@ class _BabysitterRatingFormState extends State<BabysitterRatingForm> {
             'ratingCount': newRatingCount,
           });
         } else {
-          // If babysitter document doesn't exist, initialize it
           transaction.set(babysitterRef, {
             'averageRating': _rating.toDouble(),
             'ratingCount': 1,
@@ -139,7 +142,12 @@ class _BabysitterRatingFormState extends State<BabysitterRatingForm> {
       });
 
       print('Rating submitted successfully!');
-      Navigator.pop(context);
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(
+            builder: (context) => Dashboard()), // Redirect to Dashboard
+        (Route<dynamic> route) => false, // Remove all previous routes
+      );
     } catch (e) {
       print('Error submitting rating: $e');
     }
@@ -148,13 +156,16 @@ class _BabysitterRatingFormState extends State<BabysitterRatingForm> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.pink[50],
+      backgroundColor: AppColors.lightBackground,
       appBar: AppBar(
-        title: const Text("Rate Your Babysitter"),
-        backgroundColor: Colors.pink[200],
+        title: const Text(
+          "Rate Your Babysitter",
+          style: TextStyle(color: AppColors.whiteColor),
+        ),
+        backgroundColor: AppColors.primaryColor,
         actions: [
           IconButton(
-            icon: const Icon(Icons.close),
+            icon: const Icon(Icons.close, color: AppColors.whiteColor),
             onPressed: () {
               Navigator.pop(context);
             },
@@ -170,7 +181,8 @@ class _BabysitterRatingFormState extends State<BabysitterRatingForm> {
               children: [
                 const CircleAvatar(
                   radius: 25,
-                  backgroundImage: AssetImage('assets/images/jamesboy.png'),
+                  backgroundColor: AppColors.beige,
+                  child: Icon(Icons.person, color: AppColors.blackColor),
                 ),
                 const SizedBox(width: 10),
                 Column(
@@ -179,11 +191,15 @@ class _BabysitterRatingFormState extends State<BabysitterRatingForm> {
                     Text(
                       nannyName,
                       style: const TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.bold),
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.blackColor,
+                      ),
                     ),
-                    Text(
+                    const Text(
                       'Reviews are public and include your account and device info.',
-                      style: TextStyle(fontSize: 12, color: Colors.grey[700]),
+                      style:
+                          TextStyle(fontSize: 12, color: AppColors.grayColor),
                     ),
                   ],
                 ),
@@ -196,7 +212,7 @@ class _BabysitterRatingFormState extends State<BabysitterRatingForm> {
                 return IconButton(
                   icon: Icon(
                     index < _rating ? Icons.star : Icons.star_border,
-                    color: Colors.pink[300],
+                    color: AppColors.primaryColor,
                     size: 40,
                   ),
                   onPressed: () {
@@ -211,7 +227,7 @@ class _BabysitterRatingFormState extends State<BabysitterRatingForm> {
             ElevatedButton(
               onPressed: _submitRating,
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red[300],
+                backgroundColor: AppColors.primaryColor,
                 padding:
                     const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
                 shape: RoundedRectangleBorder(
@@ -220,7 +236,7 @@ class _BabysitterRatingFormState extends State<BabysitterRatingForm> {
               ),
               child: const Text(
                 'Submit Rating',
-                style: TextStyle(fontSize: 18),
+                style: TextStyle(fontSize: 18, color: AppColors.whiteColor),
               ),
             ),
           ],

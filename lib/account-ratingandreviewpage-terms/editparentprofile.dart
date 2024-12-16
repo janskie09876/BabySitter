@@ -1,5 +1,4 @@
 import 'dart:typed_data';
-
 import 'package:babysitter/requirement-babysitterprofilepage/resources/utils.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -14,8 +13,24 @@ final List<String> genderOptions = <String>[
   'Female',
 ];
 
+class AppColors {
+  static const Color primaryColor = Color(0xFFC47F42); // Orange
+  static const Color lightBackground = Color(0xFFF5F5F5); // Light background
+  static const Color darkBackground = Color(0xFF1E1E1E); // Dark background
+  static const Color beige = Color(0xFFE3C3A3); // Beige
+  static const Color coffeeBrown = Color(0xFF51331A); // Coffee Brown
+  static const Color lightCoffeeBrown = Color(0xFF7B5B42); // Light Coffee Brown
+  static const Color blackColor = Color(0xFF000000); // Black
+  static const Color grayColor = Color(0xFF7D7D7D); // Gray
+  static const Color successColor = Color(0xFF4CAF50); // Green
+  static const Color warningColor = Color(0xFFFBC02D); // Yellow
+  static const Color whiteColor = Color(0xFFFFFFFF); // White
+  static const Color redColor = Color(0xFFFF0000); // Red
+}
+
 class EditParentProfilePage extends StatefulWidget {
   const EditParentProfilePage({super.key});
+
   @override
   State<EditParentProfilePage> createState() => _EditParentProfilePageState();
 }
@@ -30,7 +45,7 @@ class _EditParentProfilePageState extends State<EditParentProfilePage> {
   final TextEditingController phoneNumberController = TextEditingController();
   final TextEditingController locationController = TextEditingController();
 
-  String radioButtonValue = genderOptions.first;
+  String dropdownValue = genderOptions.first;
   String? latitude;
   String? longitude;
 
@@ -156,7 +171,7 @@ class _EditParentProfilePageState extends State<EditParentProfilePage> {
           'name': nameController.text,
           'phoneNumber': phoneNumberController.text,
           'location': locationController.text,
-          'gender': radioButtonValue,
+          'gender': dropdownValue,
           'birthdate': _dateController.text,
           'profileImage': _profileimage != null
               ? await uploadImageToStorage(
@@ -227,18 +242,21 @@ class _EditParentProfilePageState extends State<EditParentProfilePage> {
         child: ListView(
           children: [
             SizedBox(height: 15),
-            // Close Button
+            // Back Button instead of the Close button
             Row(
-              mainAxisAlignment: MainAxisAlignment.end,
+              mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 IconButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.pop(
+                        context); // Navigate back to the previous screen
+                  },
                   icon: CircleAvatar(
-                    backgroundColor: Colors.blue,
+                    backgroundColor: AppColors.primaryColor,
                     radius: 25,
                     child: Icon(
-                      Icons.close_rounded,
-                      color: Colors.white,
+                      Icons.arrow_back,
+                      color: AppColors.whiteColor,
                       size: 30,
                     ),
                   ),
@@ -253,7 +271,7 @@ class _EditParentProfilePageState extends State<EditParentProfilePage> {
                 Text(
                   'Update Profile',
                   style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
-                )
+                ),
               ],
             ),
             SizedBox(height: 10),
@@ -261,7 +279,7 @@ class _EditParentProfilePageState extends State<EditParentProfilePage> {
             Container(
               padding: EdgeInsets.symmetric(horizontal: 20),
               decoration: BoxDecoration(
-                color: Colors.blue[50],
+                color: AppColors.lightBackground,
                 borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(45),
                   topRight: Radius.circular(45),
@@ -285,7 +303,7 @@ class _EditParentProfilePageState extends State<EditParentProfilePage> {
                       Positioned(
                         child: Container(
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: AppColors.whiteColor,
                             borderRadius: BorderRadius.circular(45),
                           ),
                           child: IconButton(
@@ -296,7 +314,7 @@ class _EditParentProfilePageState extends State<EditParentProfilePage> {
                             icon: Icon(
                               Icons.add_circle,
                               size: 45,
-                              color: Colors.blue,
+                              color: AppColors.primaryColor,
                             ),
                           ),
                         ),
@@ -346,30 +364,29 @@ class _EditParentProfilePageState extends State<EditParentProfilePage> {
                       IconButton(
                         onPressed: getLocation,
                         icon: Icon(Icons.location_on),
-                        color: Colors.blue,
+                        color: AppColors.primaryColor,
                       ),
                     ],
                   ),
                   const SizedBox(height: 20),
-                  // Gender Radio Buttons
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: genderOptions.map((String option) {
-                      return Row(
-                        children: [
-                          Radio<String>(
-                            value: option,
-                            groupValue: radioButtonValue,
-                            onChanged: (value) {
-                              setState(() {
-                                radioButtonValue = value!;
-                              });
-                            },
-                          ),
-                          Text(option),
-                        ],
+                  // Gender Dropdown
+                  DropdownButtonFormField<String>(
+                    value: dropdownValue,
+                    decoration: const InputDecoration(
+                      labelText: 'Gender',
+                      border: OutlineInputBorder(),
+                    ),
+                    items: genderOptions.map((String value) {
+                      return DropdownMenuItem<String>(
+                        value: value,
+                        child: Text(value),
                       );
                     }).toList(),
+                    onChanged: (String? newValue) {
+                      setState(() {
+                        dropdownValue = newValue!;
+                      });
+                    },
                   ),
                   const SizedBox(height: 20),
                   // Birthdate Picker
@@ -392,7 +409,7 @@ class _EditParentProfilePageState extends State<EditParentProfilePage> {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      backgroundColor: Colors.blue,
+                      backgroundColor: AppColors.primaryColor,
                       minimumSize: Size.fromHeight(45),
                     ),
                     onPressed: () {
@@ -403,7 +420,7 @@ class _EditParentProfilePageState extends State<EditParentProfilePage> {
                     child: const Text(
                       'Save',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: AppColors.whiteColor,
                         fontSize: 23,
                         fontWeight: FontWeight.bold,
                       ),

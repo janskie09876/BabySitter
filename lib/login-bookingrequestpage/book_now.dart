@@ -4,6 +4,17 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+class AppColors {
+  static const Color primaryColor = Color(0xFFC47F42); // Orange
+  static const Color lightBackground = Color(0xFFF5F5F5); // Light background
+  static const Color beige = Color(0xFFE3C3A3); // Beige for highlights
+  static const Color coffeeBrown = Color(0xFF51331A); // Coffee Brown
+  static const Color lightCoffeeBrown = Color(0xFF7B5B42); // Light Coffee Brown
+  static const Color blackColor = Color(0xFF000000); // Black text
+  static const Color grayColor = Color(0xFF7D7D7D); // Gray for secondary text
+  static const Color whiteColor = Color(0xFFFFFFFF); // White
+}
+
 class BookNow extends StatefulWidget {
   final Nanny? nanny;
   final String nannyId;
@@ -162,7 +173,8 @@ class _BookNowState extends State<BookNow> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Book with ${widget.nanny?.name ?? 'Nanny'}'),
-        backgroundColor: const Color(0xFFE3838E),
+        backgroundColor:
+            AppColors.primaryColor, // Set to primary color from AppColors
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -170,106 +182,153 @@ class _BookNowState extends State<BookNow> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Name TextField
               TextField(
                 controller: nameController,
                 decoration: InputDecoration(
                   labelText: 'Your Name',
-                  border: OutlineInputBorder(),
+                  labelStyle:
+                      TextStyle(color: AppColors.grayColor), // Set label color
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16), // Rounded corners
+                    borderSide: BorderSide(
+                        color: AppColors.primaryColor), // Primary color border
+                  ),
                 ),
               ),
               const SizedBox(height: 16),
+
+              // Phone Number TextField
               TextField(
                 controller: phoneController,
                 decoration: InputDecoration(
                   labelText: 'Phone Number',
-                  border: OutlineInputBorder(),
+                  labelStyle: TextStyle(color: AppColors.grayColor),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide(color: AppColors.primaryColor),
+                  ),
                 ),
               ),
               const SizedBox(height: 16),
+
+              // Message/Notes TextField
               TextField(
                 controller: messageController,
                 decoration: InputDecoration(
                   labelText: 'Message/Notes',
-                  border: OutlineInputBorder(),
+                  labelStyle: TextStyle(color: AppColors.grayColor),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide(color: AppColors.primaryColor),
+                  ),
                 ),
                 maxLines: 4,
               ),
               const SizedBox(height: 20),
+
+              // Date Selection Container
               GestureDetector(
                 onTap: () => _selectDate(context),
                 child: Container(
                   padding: const EdgeInsets.symmetric(
                       vertical: 12.0, horizontal: 16.0),
                   decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey),
-                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: AppColors.grayColor),
+                    borderRadius: BorderRadius.circular(16), // Rounded corners
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.calendar_today, color: Colors.grey.shade600),
+                      Icon(Icons.calendar_today, color: AppColors.grayColor),
                       const SizedBox(width: 8),
                       Text(
                         selectedDate == null
                             ? 'Choose a date'
                             : DateFormat('yyyy-MM-dd').format(selectedDate!),
+                        style: TextStyle(color: AppColors.blackColor),
                       ),
                     ],
                   ),
                 ),
               ),
               const SizedBox(height: 20),
+
+              // Start Time Selection Container
               GestureDetector(
                 onTap: () => _selectTime(context, true),
                 child: Container(
                   padding: const EdgeInsets.symmetric(
                       vertical: 12.0, horizontal: 16.0),
                   decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey),
-                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: AppColors.grayColor),
+                    borderRadius: BorderRadius.circular(16),
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.access_time, color: Colors.grey.shade600),
+                      Icon(Icons.access_time, color: AppColors.grayColor),
                       const SizedBox(width: 8),
                       Text(
                         startTime == null
                             ? 'Choose start time'
                             : startTime!.format(context),
+                        style: TextStyle(color: AppColors.blackColor),
                       ),
                     ],
                   ),
                 ),
               ),
               const SizedBox(height: 20),
+
+              // End Time Selection Container
               GestureDetector(
                 onTap: () => _selectTime(context, false),
                 child: Container(
                   padding: const EdgeInsets.symmetric(
                       vertical: 12.0, horizontal: 16.0),
                   decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey),
-                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: AppColors.grayColor),
+                    borderRadius: BorderRadius.circular(16),
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.access_time, color: Colors.grey.shade600),
+                      Icon(Icons.access_time, color: AppColors.grayColor),
                       const SizedBox(width: 8),
                       Text(
                         endTime == null
                             ? 'Choose end time'
                             : endTime!.format(context),
+                        style: TextStyle(color: AppColors.blackColor),
                       ),
                     ],
                   ),
                 ),
               ),
               const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _submitBooking,
-                child: const Text('Confirm Booking'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFE3838E),
-                  padding: const EdgeInsets.symmetric(vertical: 14.0),
+
+              // Confirm Booking Button
+              Center(
+                child: SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: _submitBooking,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors
+                          .primaryColor, // Use primary color for button
+                      padding: const EdgeInsets.symmetric(vertical: 14.0),
+                      shape: RoundedRectangleBorder(
+                        borderRadius:
+                            BorderRadius.circular(10), // Rounded corners
+                      ),
+                    ),
+                    child: const Text(
+                      'Confirm Booking',
+                      style: TextStyle(
+                        color: AppColors.blackColor, // Font color set to black
+                        fontSize: 16, // Font size
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ],

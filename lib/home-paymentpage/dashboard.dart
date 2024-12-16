@@ -117,7 +117,7 @@ class _DashboardState extends State<Dashboard> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => Parentaccountpage(),
+                          builder: (context) => ParentAccountPage(),
                         ),
                       );
                     }),
@@ -390,7 +390,7 @@ class _DashboardState extends State<Dashboard> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => Parentaccountpage(),
+                        builder: (context) => ParentAccountPage(),
                       ),
                     );
                   },

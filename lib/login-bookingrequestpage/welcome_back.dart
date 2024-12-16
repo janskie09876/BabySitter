@@ -210,29 +210,6 @@ class _WelcomeBackState extends State<WelcomeBack> {
                 style: TextStyle(
                     color: Color(0xFF000000)), // Primary Text in input
               ),
-              const SizedBox(height: 20),
-
-              // Forgot Password
-              Align(
-                alignment: Alignment.centerRight,
-                child: GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => RecoverPassword(),
-                      ),
-                    );
-                  },
-                  child: const Text(
-                    "Forgot password?",
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Color(0xFFC47F42), // Orange for link
-                    ),
-                  ),
-                ),
-              ),
               const SizedBox(height: 40),
 
               // Login Button
@@ -253,6 +230,26 @@ class _WelcomeBackState extends State<WelcomeBack> {
                       fontSize: 16,
                       color: Colors.white,
                     ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+
+              // Forgot Password (Below Login Button)
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => RecoverPassword(),
+                    ),
+                  );
+                },
+                child: const Text(
+                  "Forgot password?",
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Color(0xFFC47F42), // Orange for link
                   ),
                 ),
               ),

@@ -1,8 +1,18 @@
 import 'package:babysitter/home-paymentpage/cashpay_page.dart';
-import 'package:babysitter/notifications-stylepage/styles.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+
+class AppColors {
+  static const Color primaryColor = Color(0xFFC47F42); // Orange
+  static const Color lightBackground = Color(0xFFF5F5F5); // Light background
+  static const Color beige = Color(0xFFE3C3A3); // Beige for highlights
+  static const Color coffeeBrown = Color(0xFF51331A); // Coffee Brown
+  static const Color lightCoffeeBrown = Color(0xFF7B5B42); // Light Coffee Brown
+  static const Color blackColor = Color(0xFF000000); // Black text
+  static const Color grayColor = Color(0xFF7D7D7D); // Gray for secondary text
+  static const Color whiteColor = Color(0xFFFFFFFF); // White
+}
 
 class PaymentDetailsPage extends StatefulWidget {
   final String bookingId; // Added bookingId
@@ -25,7 +35,6 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
     fetchPaymentDetails();
   }
 
-  // Safely parse 24-hour time strings into TimeOfDay objects
   TimeOfDay safeParseTime(String timeString) {
     try {
       final DateTime parsedTime =
@@ -37,12 +46,10 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
     }
   }
 
-  // Calculate the total babysitting hours
   double calculateHours(TimeOfDay start, TimeOfDay end) {
     final startMinutes = start.hour * 60 + start.minute;
     final endMinutes = end.hour * 60 + end.minute;
 
-    // Handle overnight shifts (e.g., start 22:00, end 02:00)
     final totalMinutes = endMinutes >= startMinutes
         ? endMinutes - startMinutes
         : (1440 - startMinutes) + endMinutes;
@@ -76,18 +83,14 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
 
       final subBookingData = subBookingSnapshot.docs.first.data();
 
-      // Fetch start and end times in 24-hour format
       final String startTimeString = subBookingData['startTime'];
       final String endTimeString = subBookingData['endTime'];
 
-      // Parse times into TimeOfDay objects
       final startTime = safeParseTime(startTimeString);
       final endTime = safeParseTime(endTimeString);
 
-      // Calculate babysitting hours
       final totalHours = calculateHours(startTime, endTime);
 
-      // Fetch babysitter's service fee
       final babysitterDoc = await FirebaseFirestore.instance
           .collection('babysitters')
           .doc(bookingData?['user2'])
@@ -103,7 +106,7 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
 
       setState(() {
         subtotal = totalHours * serviceFee;
-        total = subtotal; // Adjust as needed
+        total = subtotal;
       });
     } catch (e) {
       print('Error fetching payment details: $e');
@@ -117,30 +120,32 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
         title: const Text(
           "Payment Details",
           style: TextStyle(
-            fontFamily: 'Baloo', // Apply Baloo font
+            fontFamily: 'Baloo',
             fontSize: 20,
             fontWeight: FontWeight.bold,
+            color: AppColors.whiteColor,
           ),
         ),
         centerTitle: true,
-        backgroundColor: AppStyles.whiteColor,
+        backgroundColor: AppColors.primaryColor,
         elevation: 1,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppStyles.textColor),
+          icon: const Icon(Icons.arrow_back, color: AppColors.whiteColor),
           onPressed: () => Navigator.pop(context),
         ),
       ),
       body: Padding(
-        padding: AppStyles.defaultPadding,
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const Text(
               "Payment Method",
               style: TextStyle(
-                fontFamily: 'Baloo', // Apply Baloo font
+                fontFamily: 'Baloo',
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
+                color: AppColors.blackColor,
               ),
             ),
             const SizedBox(height: 30),
@@ -157,23 +162,24 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
             ),
 
             const Spacer(),
-            // Subtotal and Total
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Text(
                   "Subtotal:",
                   style: TextStyle(
-                    fontFamily: 'Baloo', // Apply Baloo font
+                    fontFamily: 'Baloo',
                     fontSize: 16,
+                    color: AppColors.blackColor,
                   ),
                 ),
                 Text(
                   "\₱${subtotal.toStringAsFixed(2)}",
                   style: const TextStyle(
-                    fontFamily: 'Baloo', // Apply Baloo font
+                    fontFamily: 'Baloo',
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
+                    color: AppColors.blackColor,
                   ),
                 ),
               ],
@@ -185,16 +191,18 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
                 const Text(
                   "Total:",
                   style: TextStyle(
-                    fontFamily: 'Baloo', // Apply Baloo font
+                    fontFamily: 'Baloo',
                     fontSize: 16,
+                    color: AppColors.blackColor,
                   ),
                 ),
                 Text(
                   "\₱${total.toStringAsFixed(2)}",
                   style: const TextStyle(
-                    fontFamily: 'Baloo', // Apply Baloo font
+                    fontFamily: 'Baloo',
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
+                    color: AppColors.blackColor,
                   ),
                 ),
               ],
@@ -204,13 +212,11 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
             ElevatedButton(
               onPressed: () {
                 if (selectedPaymentMethod == "Cash on Hand") {
-                  // Navigate to CashPayPage
                   Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (context) => CashPayPage(
-                        bookingId:
-                            widget.bookingId, // Pass bookingId to CashPayPage
+                        bookingId: widget.bookingId,
                       ),
                     ),
                   );
@@ -223,7 +229,7 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
                 }
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFE3838E),
+                backgroundColor: AppColors.primaryColor,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
@@ -232,9 +238,9 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
               child: const Text(
                 "Pay Now",
                 style: TextStyle(
-                  fontFamily: 'Baloo', // Apply Baloo font
+                  fontFamily: 'Baloo',
                   fontSize: 18,
-                  color: Colors.white,
+                  color: AppColors.whiteColor,
                 ),
               ),
             ),
@@ -244,7 +250,6 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
     );
   }
 
-  // Helper method to create Payment Method Card
   Widget buildPaymentMethodCard({
     required String label,
     required String iconPath,
@@ -254,12 +259,12 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: AppStyles.defaultPadding,
+        padding: const EdgeInsets.all(16.0),
         decoration: BoxDecoration(
-          color: AppStyles.whiteColor,
+          color: AppColors.whiteColor,
           borderRadius: BorderRadius.circular(12.0),
           border: Border.all(
-            color: isSelected ? AppStyles.secondaryColor : Colors.grey.shade300,
+            color: isSelected ? AppColors.primaryColor : Colors.grey.shade300,
             width: isSelected ? 2.0 : 1.0,
           ),
           boxShadow: [
@@ -283,15 +288,16 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
               child: Text(
                 label,
                 style: const TextStyle(
-                  fontFamily: 'Baloo', // Apply Baloo font
+                  fontFamily: 'Baloo',
                   fontSize: 16,
+                  color: AppColors.blackColor,
                 ),
               ),
             ),
             Icon(
-              Icons.arrow_forward_ios, // Arrow for selection
-              color: isSelected ? AppStyles.secondaryColor : Colors.grey,
-              size: 18, // Adjust the size for a neat appearance
+              Icons.arrow_forward_ios,
+              color: isSelected ? AppColors.primaryColor : Colors.grey,
+              size: 18,
             ),
           ],
         ),

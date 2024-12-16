@@ -1,5 +1,5 @@
-import 'package:babysitter/home-paymentpage/nannylist.dart';
 import 'package:flutter/material.dart';
+import 'package:babysitter/home-paymentpage/nannylist.dart';
 
 class NannyCard extends StatelessWidget {
   final Nanny nanny;
@@ -45,7 +45,6 @@ class NannyCard extends StatelessWidget {
                                 style: const TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
-                                  fontFamily: 'Baloo',
                                 ),
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -69,7 +68,6 @@ class NannyCard extends StatelessWidget {
                                       : Colors.grey,
                                   fontSize: 12,
                                   fontWeight: FontWeight.bold,
-                                  fontFamily: 'Baloo',
                                 ),
                               ),
                             ),
@@ -88,6 +86,15 @@ class NannyCard extends StatelessWidget {
                             ),
                           ),
                         ),
+                        // Added rating count section
+                        if (nanny.ratingCount > 0)
+                          Text(
+                            '${nanny.ratingCount} reviews',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
                       ],
                     ),
                   ),
@@ -109,7 +116,7 @@ class NannyCard extends StatelessWidget {
                             const Icon(
                               Icons.calendar_today,
                               size: 16,
-                              color: Color(0xFFE3838E),
+                              color: Color(0xFFC47F42),
                             ),
                             const SizedBox(width: 4),
                             Flexible(
@@ -118,7 +125,6 @@ class NannyCard extends StatelessWidget {
                                 overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(
                                   fontSize: 14,
-                                  fontFamily: 'Baloo',
                                 ),
                               ),
                             ),
@@ -130,7 +136,7 @@ class NannyCard extends StatelessWidget {
                             const Icon(
                               Icons.location_on,
                               size: 16,
-                              color: Color(0xFFE3838E),
+                              color: Color(0xFFC47F42),
                             ),
                             const SizedBox(width: 4),
                             Flexible(
@@ -139,7 +145,6 @@ class NannyCard extends StatelessWidget {
                                 overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(
                                   fontSize: 14,
-                                  fontFamily: 'Baloo',
                                 ),
                               ),
                             ),
@@ -151,7 +156,7 @@ class NannyCard extends StatelessWidget {
                             const Icon(
                               Icons.phone,
                               size: 16,
-                              color: Color(0xFFE3838E),
+                              color: Color(0xFFC47F42),
                             ),
                             const SizedBox(width: 4),
                             Flexible(
@@ -160,7 +165,6 @@ class NannyCard extends StatelessWidget {
                                 overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(
                                   fontSize: 14,
-                                  fontFamily: 'Baloo',
                                 ),
                               ),
                             ),
@@ -182,19 +186,16 @@ class NannyCard extends StatelessWidget {
                             'Age: ',
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
-                              fontFamily: 'Baloo',
                             ),
                           ),
                           Text(
                             '${nanny.age}',
-                            style: const TextStyle(fontFamily: 'Baloo'),
                           ),
                         ],
                       ),
                       const SizedBox(height: 8),
                       const Text(
                         'Gender: Female', // Static gender value, change as needed
-                        style: TextStyle(fontFamily: 'Baloo'),
                       ),
                     ],
                   ),
@@ -211,9 +212,8 @@ class NannyCard extends StatelessWidget {
                     child: const Text(
                       'More Information',
                       style: TextStyle(
-                        color: Color(0xFFE3838E),
+                        color: Color(0xFF1E1E1E),
                         fontWeight: FontWeight.bold,
-                        fontFamily: 'Baloo',
                       ),
                     ),
                   ),

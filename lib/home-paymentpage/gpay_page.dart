@@ -173,7 +173,7 @@ class GPayPage extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                       builder: (context) =>
-                          AccountPage(), // Navigate to AccountPage (self-link optional)
+                          BabysitterAccountPage(), // Navigate to AccountPage (self-link optional)
                     ),
                   );
                 },

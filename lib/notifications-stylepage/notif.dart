@@ -4,6 +4,17 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+class AppColors {
+  static const Color primaryColor = Color(0xFFC47F42); // Orange
+  static const Color lightBackground = Color(0xFFF5F5F5); // Light background
+  static const Color beige = Color(0xFFE3C3A3); // Beige for highlights
+  static const Color coffeeBrown = Color(0xFF51331A); // Coffee Brown
+  static const Color lightCoffeeBrown = Color(0xFF7B5B42); // Light Coffee Brown
+  static const Color blackColor = Color(0xFF000000); // Black text
+  static const Color grayColor = Color(0xFF7D7D7D); // Gray for secondary text
+  static const Color whiteColor = Color(0xFFFFFFFF); // White
+}
+
 class ParentNotifications extends StatelessWidget {
   const ParentNotifications({Key? key, required String parentId})
       : super(key: key);
@@ -17,6 +28,8 @@ class ParentNotifications extends StatelessWidget {
       return Scaffold(
         appBar: AppBar(
           title: const Text('Notifications'),
+          backgroundColor:
+              AppColors.primaryColor, // Set AppBar color to primaryColor
         ),
         body: const Center(
           child: Text('You need to log in to view notifications.'),
@@ -27,7 +40,8 @@ class ParentNotifications extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Notifications'),
-        backgroundColor: Colors.blue,
+        backgroundColor:
+            AppColors.primaryColor, // Set AppBar color to primaryColor
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
@@ -65,9 +79,19 @@ class ParentNotifications extends StatelessWidget {
                     fontWeight: isRead
                         ? FontWeight.normal
                         : FontWeight.bold, // Bold for unread notifications
+                    color: AppColors
+                        .blackColor, // Text color for notification message
                   ),
                 ),
-                subtitle: Text(_formatTimestamp(data['timestamp'])),
+                subtitle: Text(
+                  _formatTimestamp(data['timestamp']),
+                  style: TextStyle(
+                      color: AppColors.grayColor), // Gray color for timestamp
+                ),
+                tileColor: isRead
+                    ? AppColors.whiteColor
+                    : AppColors
+                        .lightBackground, // Light background for unread notifications
                 onTap: () async {
                   // Mark the notification as read when clicked
                   await _markAsRead(notification.id);
@@ -78,8 +102,8 @@ class ParentNotifications extends StatelessWidget {
                     final bookingId = data['bookingId'];
                     if (bookingId != null && bookingId is String) {
                       // Check the payment status before navigating
-                      final paymentStatus = await _checkPaymentStatus(
-                          bookingId); // Function to check payment status
+                      final paymentStatus =
+                          await _checkPaymentStatus(bookingId);
 
                       if (paymentStatus == 'Paid') {
                         // Show AlertDialog for already paid

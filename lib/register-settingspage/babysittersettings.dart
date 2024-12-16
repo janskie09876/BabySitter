@@ -11,7 +11,7 @@ class BabySettings extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        fontFamily: 'BalsamiqSans', // Set the default body font
+        fontFamily: '', // Set the default body font
       ),
       home: Scaffold(
         body: ListView(children: [
@@ -176,7 +176,7 @@ class _Settings6DelaCernaState extends State<Settings6DelaCerna> {
       title: Text(
         title,
         style: const TextStyle(
-          fontFamily: 'BalsamiqSans', // Body font (Balsamiq Sans)
+          fontFamily: '', // Body font (Balsamiq Sans)
           color: Color(0xFF424242),
           fontSize: 16,
           fontWeight: FontWeight.w400,

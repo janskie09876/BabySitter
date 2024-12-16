@@ -8,6 +8,18 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:babysitter/home-paymentpage/nannycard.dart';
 
+// Define AppColors class
+class AppColors {
+  static const Color primaryColor = Color(0xFFC47F42); // Orange
+  static const Color lightBackground = Color(0xFFF5F5F5); // Light background
+  static const Color beige = Color(0xFFE3C3A3); // Beige for highlights
+  static const Color coffeeBrown = Color(0xFF51331A); // Coffee Brown
+  static const Color lightCoffeeBrown = Color(0xFF7B5B42); // Light Coffee Brown
+  static const Color blackColor = Color(0xFF000000); // Black text
+  static const Color grayColor = Color(0xFF7D7D7D); // Gray for secondary text
+  static const Color whiteColor = Color(0xFFFFFFFF); // White
+}
+
 int _calculateAge(DateTime birthDate) {
   final currentDate = DateTime.now();
   int age = currentDate.year - birthDate.year;
@@ -59,7 +71,8 @@ class _ViewBabysitterState extends State<ViewBabysitter> {
     return Scaffold(
       appBar: AppBar(
         title: Text('${widget.nanny!.name}\'s Profile'),
-        backgroundColor: const Color(0xFFE3838E),
+        backgroundColor:
+            AppColors.primaryColor, // Using AppColors for the AppBar
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -83,21 +96,64 @@ class _ViewBabysitterState extends State<ViewBabysitter> {
                         style: const TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
-                          fontFamily: 'Baloo',
                         ),
                       ),
                       const SizedBox(height: 4),
                       Row(
-                        children: List.generate(
-                          5,
-                          (index) => Icon(
-                            Icons.star,
-                            color: index < widget.nanny!.rating.toInt()
-                                ? Colors.amber
-                                : Colors.grey.shade400,
-                            size: 20,
+                        children: [
+                          // Stars with fractional logic
+                          Row(
+                            children: List.generate(5, (index) {
+                              final rating = widget.nanny!.rating;
+                              if (index < rating.floor()) {
+                                return const Icon(
+                                  Icons.star,
+                                  color: Colors.amber,
+                                  size: 20,
+                                );
+                              } else if (index == rating.floor() &&
+                                  rating % 1 != 0) {
+                                return const Icon(
+                                  Icons.star_half,
+                                  color: Colors.amber,
+                                  size: 20,
+                                );
+                              } else {
+                                return const Icon(
+                                  Icons.star_border,
+                                  color: Colors.amber,
+                                  size: 20,
+                                );
+                              }
+                            }),
                           ),
-                        ),
+                          const SizedBox(
+                              width:
+                                  8), // Spacing between stars and icon button
+                          // Arrow Button
+                          IconButton(
+                            onPressed: () {
+                              // Navigate to the ReviewPage
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => ReviewPage(
+                                    nannyName: widget
+                                        .nanny!.name, // Pass the necessary data
+                                  ),
+                                ),
+                              );
+                            },
+                            icon: const Icon(
+                              Icons.arrow_forward,
+                              color: AppColors
+                                  .primaryColor, // Use AppColors for consistent design
+                              size: 20, // Adjust size if necessary
+                            ),
+                            tooltip:
+                                'Babysitter Ratings & Reviews', // Tooltip for accessibility
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 8),
                       Container(
@@ -119,7 +175,6 @@ class _ViewBabysitterState extends State<ViewBabysitter> {
                                 : Colors.grey,
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
-                            fontFamily: 'Baloo',
                           ),
                         ),
                       ),
@@ -132,10 +187,10 @@ class _ViewBabysitterState extends State<ViewBabysitter> {
             // Personal Information
             Text(
               'Personal Information:',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                fontFamily: 'Baloo',
+                color: AppColors.blackColor, // Using AppColors for text color
               ),
             ),
             const SizedBox(height: 8),
@@ -144,32 +199,30 @@ class _ViewBabysitterState extends State<ViewBabysitter> {
                       widget.nanny!.birthdate!.isNotEmpty
                   ? 'Age: ${_calculateAge(_parseBirthDate(widget.nanny!.birthdate ?? ''))}'
                   : 'Age: Unknown', // Handle null or empty birthdate
-              style: const TextStyle(fontFamily: 'Baloo', fontSize: 16),
+              style: const TextStyle(fontSize: 16),
             ),
-
             Text('Date of Birth: ${widget.nanny?.birthdate}',
-                style: const TextStyle(fontFamily: 'Baloo', fontSize: 16)),
+                style: const TextStyle(fontSize: 16)),
             const SizedBox(height: 8),
             Text('Address: ${widget.nanny?.address}',
-                style: const TextStyle(fontFamily: 'Baloo', fontSize: 16)),
+                style: const TextStyle(fontSize: 16)),
             const SizedBox(height: 8),
             Text('Phone Number: ${widget.nanny?.phoneNumber}',
-                style: const TextStyle(fontFamily: 'Baloo', fontSize: 16)),
-
+                style: const TextStyle(fontSize: 16)),
             const SizedBox(height: 20),
 
             // Availability Section
             Text(
               'Availability:',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                fontFamily: 'Baloo',
+                color: AppColors.blackColor,
               ),
             ),
             const SizedBox(height: 8),
             Text(widget.nanny!.availability,
-                style: const TextStyle(fontFamily: 'Baloo', fontSize: 16)),
+                style: const TextStyle(fontSize: 16)),
 
             const SizedBox(height: 20),
 
@@ -263,7 +316,22 @@ class _ViewBabysitterState extends State<ViewBabysitter> {
                       );
                     }
                   },
-                  child: const Text('Contact Nanny'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor:
+                        AppColors.primaryColor, // Keep the primary color
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius:
+                          BorderRadius.circular(12), // Rounded borders
+                    ),
+                  ),
+                  child: const Text(
+                    'Contact Nanny',
+                    style: TextStyle(
+                      color: AppColors.blackColor, // Set text color to black
+                    ),
+                  ),
                 ),
                 const SizedBox(width: 16),
                 ElevatedButton(
@@ -278,31 +346,26 @@ class _ViewBabysitterState extends State<ViewBabysitter> {
                       ),
                     );
                   },
-                  child: const Text('Book Babysitter'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFE3838E),
+                    backgroundColor:
+                        AppColors.primaryColor, // Keep the primary color
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text(
+                    'Book Babysitter',
+                    style: TextStyle(
+                      color: AppColors.blackColor, // Set text color to black
+                    ),
                   ),
                 ),
               ],
             ),
+
             const SizedBox(width: 16),
-            ElevatedButton(
-              onPressed: () {
-                // Navigate to BookNow and pass the nanny data
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => ReviewPage(
-                      nannyName: '',
-                    ),
-                  ),
-                );
-              },
-              child: const Text('Babysitter Ratings & Reviews'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFE3838E),
-              ),
-            ),
           ],
         ),
       ),

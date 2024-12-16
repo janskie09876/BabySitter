@@ -3,6 +3,17 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+class AppColors {
+  static const Color primaryColor = Color(0xFFC47F42); // Orange
+  static const Color lightBackground = Color(0xFFF5F5F5); // Light background
+  static const Color beige = Color(0xFFE3C3A3); // Beige for highlights
+  static const Color coffeeBrown = Color(0xFF51331A); // Coffee Brown
+  static const Color lightCoffeeBrown = Color(0xFF7B5B42); // Light Coffee Brown
+  static const Color blackColor = Color(0xFF000000); // Black text
+  static const Color grayColor = Color(0xFF7D7D7D); // Gray for secondary text
+  static const Color whiteColor = Color(0xFFFFFFFF); // White
+}
+
 class ParentChatListPage extends StatefulWidget {
   @override
   _ParentChatListPageState createState() => _ParentChatListPageState();
@@ -18,7 +29,8 @@ class _ParentChatListPageState extends State<ParentChatListPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Chats'),
-        backgroundColor: Colors.blue,
+        backgroundColor:
+            AppColors.primaryColor, // Use primaryColor from AppColors
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: _firestore
@@ -74,7 +86,12 @@ class _ParentChatListPageState extends State<ParentChatListPage> {
                   print("Nanny Name: $nannyName");
 
                   return ListTile(
-                    title: Text(nannyName),
+                    title: Text(
+                      nannyName,
+                      style: TextStyle(
+                          color: AppColors
+                              .blackColor), // Use blackColor from AppColors
+                    ),
                     onTap: () {
                       Navigator.push(
                         context,
@@ -89,6 +106,11 @@ class _ParentChatListPageState extends State<ParentChatListPage> {
                         ),
                       );
                     },
+                    tileColor: AppColors
+                        .lightBackground, // Use lightBackground for tile color
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12.0),
+                    ),
                   );
                 },
               );

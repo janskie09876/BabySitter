@@ -2,6 +2,17 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+class AppColors {
+  static const Color primaryColor = Color(0xFFC47F42); // Orange
+  static const Color lightBackground = Color(0xFFF5F5F5); // Light background
+  static const Color beige = Color(0xFFE3C3A3); // Beige for highlights
+  static const Color coffeeBrown = Color(0xFF51331A); // Coffee Brown
+  static const Color lightCoffeeBrown = Color(0xFF7B5B42); // Light Coffee Brown
+  static const Color blackColor = Color(0xFF000000); // Black text
+  static const Color grayColor = Color(0xFF7D7D7D); // Gray for secondary text
+  static const Color whiteColor = Color(0xFFFFFFFF); // White
+}
+
 class BabysitterChatPage extends StatefulWidget {
   final String chatId;
   final String nannyName;
@@ -51,7 +62,8 @@ class _BabysitterChatPageState extends State<BabysitterChatPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Chat with ${widget.nannyName}'),
-        backgroundColor: const Color(0xFFE3838E),
+        backgroundColor:
+            AppColors.primaryColor, // Use primaryColor from AppColors
       ),
       body: Column(
         children: [
@@ -98,17 +110,21 @@ class _BabysitterChatPageState extends State<BabysitterChatPage> {
                           padding: const EdgeInsets.all(8.0),
                           decoration: BoxDecoration(
                             color: isSentByCurrentUser
-                                ? Colors.blue.shade100
-                                : Colors.grey.shade300,
-                            borderRadius: BorderRadius.circular(8),
+                                ? AppColors
+                                    .primaryColor // Light shade of primaryColor for sent messages
+                                : AppColors
+                                    .beige, // Light background for received messages
+                            borderRadius: BorderRadius.circular(
+                                16), // More rounded corners
                           ),
                           child: Text(
                             messageText,
                             style: TextStyle(
                               fontSize: 16,
                               color: isSentByCurrentUser
-                                  ? Colors.blue.shade900
-                                  : Colors.grey.shade800,
+                                  ? AppColors.whiteColor
+                                  : AppColors
+                                      .blackColor, // Text color for sent and received messages
                             ),
                           ),
                         ),
@@ -121,7 +137,11 @@ class _BabysitterChatPageState extends State<BabysitterChatPage> {
                           timestamp != null
                               ? timestamp.toDate().toLocal().toString()
                               : 'Loading...',
-                          style: TextStyle(fontSize: 12),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color:
+                                AppColors.grayColor, // Gray color for timestamp
+                          ),
                         ),
                       ),
                     );
@@ -137,14 +157,33 @@ class _BabysitterChatPageState extends State<BabysitterChatPage> {
                 Expanded(
                   child: TextField(
                     controller: _messageController,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: 'Type a message',
-                      border: OutlineInputBorder(),
+                      labelStyle: TextStyle(
+                          color: AppColors.grayColor), // Gray for label
+                      border: OutlineInputBorder(
+                        borderRadius:
+                            BorderRadius.circular(20), // Rounded corners
+                        borderSide: BorderSide(
+                            color: AppColors
+                                .primaryColor), // Primary color for border
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius:
+                            BorderRadius.circular(16), // Rounded corners
+                        borderSide: BorderSide(
+                            color: AppColors
+                                .primaryColor), // Primary color for focused border
+                      ),
                     ),
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.send),
+                  icon: Icon(
+                    Icons.send,
+                    color: AppColors
+                        .primaryColor, // Icon color set to primaryColor
+                  ),
                   onPressed: _sendMessage,
                 ),
               ],

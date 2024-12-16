@@ -12,12 +12,12 @@ class AppColors {
   static const Color whiteColor = Color(0xFFFFFFFF); // White
 }
 
-class EnterNewPassword extends StatefulWidget {
+class NannyChangePassword extends StatefulWidget {
   @override
-  _EnterNewPasswordState createState() => _EnterNewPasswordState();
+  _NannyChangePasswordState createState() => _NannyChangePasswordState();
 }
 
-class _EnterNewPasswordState extends State<EnterNewPassword> {
+class _NannyChangePasswordState extends State<NannyChangePassword> {
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _repeatPasswordController =
       TextEditingController();

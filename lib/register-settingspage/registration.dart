@@ -302,74 +302,95 @@ class _RegistrationState extends State<Registration> {
               ),
               const SizedBox(height: 20),
 
-              // Terms and Privacy Policy Checkbox Section
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 10),
-                child: Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
+              // Terms and Privacy Policy Checkbox Section (Updated)
+              const SizedBox(height: 0), // Spacing between Role and Checkboxes
+              const Text(
+                "I accept the following:",
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF000000), // Primary Text (Black)
+                ),
+              ),
+              Column(
+                crossAxisAlignment:
+                    CrossAxisAlignment.start, // Align to the left
+                children: [
+                  Row(
+                    mainAxisAlignment:
+                        MainAxisAlignment.start, // Align checkbox to the left
                     children: [
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Checkbox(
-                            value: acceptTerms,
-                            onChanged: (bool? newValue) {
-                              setState(() {
-                                acceptTerms = newValue!;
-                              });
-                            },
-                          ),
-                          InkWell(
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => TermsAndConditionsPage(
-                                    onAccept: () {
-                                      print("Terms Accepted");
-                                    },
-                                  ),
-                                ),
-                              );
-                            },
-                            child: const Text("I accept the Terms of Service",
-                                style: TextStyle(color: Color(0xFF7D7D7D))),
-                          ),
-                        ],
+                      Checkbox(
+                        value: acceptTerms,
+                        onChanged: (bool? newValue) {
+                          setState(() {
+                            acceptTerms = newValue!;
+                          });
+                        },
                       ),
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Checkbox(
-                            value: acceptPrivacyPolicy,
-                            onChanged: (bool? newValue) {
-                              setState(() {
-                                acceptPrivacyPolicy = newValue!;
-                              });
-                            },
-                          ),
-                          InkWell(
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => PrivacyPolicyPage(
-                                    onAccept: () {
-                                      print("Privacy Policy Accepted");
-                                    },
-                                  ),
+                      Expanded(
+                        child: InkWell(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => TermsAndConditionsPage(
+                                  onAccept: () {
+                                    print("Terms Accepted");
+                                  },
                                 ),
-                              );
-                            },
-                            child: const Text("I accept the Privacy Policy",
-                                style: TextStyle(color: Color(0xFF7D7D7D))),
+                              ),
+                            );
+                          },
+                          child: const Text(
+                            "I accept the Terms of Service",
+                            style: TextStyle(
+                              color: Color(0xFF7D7D7D), // Secondary Text (Gray)
+                              fontSize: 14,
+                            ),
                           ),
-                        ],
+                        ),
                       ),
                     ],
                   ),
-                ),
+                  Row(
+                    mainAxisAlignment:
+                        MainAxisAlignment.start, // Align checkbox to the left
+                    children: [
+                      Checkbox(
+                        value: acceptPrivacyPolicy,
+                        onChanged: (bool? newValue) {
+                          setState(() {
+                            acceptPrivacyPolicy = newValue!;
+                          });
+                        },
+                      ),
+                      Expanded(
+                        child: InkWell(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => PrivacyPolicyPage(
+                                  onAccept: () {
+                                    print("Privacy Policy Accepted");
+                                  },
+                                ),
+                              ),
+                            );
+                          },
+                          child: const Text(
+                            "I accept the Privacy Policy",
+                            style: TextStyle(
+                              color: Color(0xFF7D7D7D), // Secondary Text (Gray)
+                              fontSize: 14,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
 
               // Register Button

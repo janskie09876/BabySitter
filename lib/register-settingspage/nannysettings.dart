@@ -1,8 +1,8 @@
-import 'package:babysitter/account-ratingandreviewpage-terms/editparentprofile.dart';
+import 'package:babysitter/account-ratingandreviewpage-terms/editbabysitterprofile.dart';
 import 'package:babysitter/account-ratingandreviewpage-terms/privacypolicy.dart';
 import 'package:babysitter/account-ratingandreviewpage-terms/termspage.dart';
-import 'package:babysitter/location-transactionhistorypage/transactionhistorypage.dart';
-import 'package:babysitter/register-settingspage/changepass.dart';
+import 'package:babysitter/location-transactionhistorypage/nannytransaction.dart';
+import 'package:babysitter/register-settingspage/nannychangepass.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -22,12 +22,12 @@ class AppColors {
   static const Color redColor = Color(0xFFFF0000); // Red
 }
 
-class SettingsPage extends StatefulWidget {
+class NannySettingsPage extends StatefulWidget {
   @override
-  _SettingsPageState createState() => _SettingsPageState();
+  _NannySettingsPageState createState() => _NannySettingsPageState();
 }
 
-class _SettingsPageState extends State<SettingsPage> {
+class _NannySettingsPageState extends State<NannySettingsPage> {
   String userName = "Guest"; // Default user name
 
   @override
@@ -50,7 +50,7 @@ class _SettingsPageState extends State<SettingsPage> {
       if (user != null) {
         // Query Firestore for the user's document using the UID
         DocumentSnapshot userDoc = await FirebaseFirestore.instance
-            .collection('parents')
+            .collection('babysitters')
             .doc(user.uid) // Match document ID with the UID
             .get();
 
@@ -111,14 +111,14 @@ class _SettingsPageState extends State<SettingsPage> {
                 'Edit profile',
                 style: TextStyle(color: AppColors.blackColor),
               ),
-              trailing: Icon(Icons.arrow_forward_ios, color: Color(0xFFC47F42)),
+              trailing:
+                  Icon(Icons.arrow_forward_ios, color: AppColors.primaryColor),
               onTap: () {
-                // Navigate to EditParentProfilePage
                 Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (context) =>
-                        EditParentProfilePage(), // Replace with your class
+                        EditBabysitterProfilePage(), // Navigate to EditBabysitterProfilePage
                   ),
                 );
               },
@@ -126,15 +126,18 @@ class _SettingsPageState extends State<SettingsPage> {
             Divider(),
             ListTile(
               leading: Icon(Icons.history, color: AppColors.primaryColor),
-              title: Text('Payments history',
-                  style: TextStyle(color: AppColors.blackColor)),
-              trailing: Icon(Icons.arrow_forward_ios, color: Color(0xFFC47F42)),
+              title: Text(
+                'Payments Received',
+                style: TextStyle(color: AppColors.blackColor),
+              ),
+              trailing:
+                  Icon(Icons.arrow_forward_ios, color: AppColors.primaryColor),
               onTap: () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (context) =>
-                        TransactionHistoryPage(), // Replace with your class
+                        NannyTransactionPage(), // Navigate to NannyTransactionPage
                   ),
                 );
               },
@@ -151,7 +154,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   context,
                   MaterialPageRoute(
                     builder: (context) =>
-                        EnterNewPassword(), // Replace with your class
+                        NannyChangePassword(), // Replace with your class
                   ),
                 );
               },
