@@ -1,9 +1,9 @@
 import 'dart:async';
-import 'package:babysitter/home-paymentpage/dashboard_nanny.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:custom_info_window/custom_info_window.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:babysitter/pages/profiledialog.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geocoding/geocoding.dart';
@@ -27,79 +27,6 @@ class _ViewMap1State extends State<ViewMap1> {
   late String long;
   double _radius = 500; // Default radius for geofence
   BitmapDescriptor? currentLocationIcon;
-
-  void _liveLocation() {
-    try {
-      LocationSettings locationSettings = const LocationSettings(
-        accuracy:
-            LocationAccuracy.high, // Use high accuracy for precise updates
-        distanceFilter:
-            100, // Only update location if the user moves by 100 meters
-      );
-
-      // Listen to location updates
-      Geolocator.getPositionStream(locationSettings: locationSettings)
-          .listen((Position position) {
-        // Update the latitude and longitude
-        lat = position.latitude.toString();
-        long = position.longitude.toString();
-
-        // Update the state with the new position
-        setState(() {
-          location = LatLng(position.latitude, position.longitude);
-          locationMsg = 'Lat: $lat , Long: $long';
-
-          // Move the map's camera to the new location
-          _customInfoWindowController.googleMapController?.animateCamera(
-            CameraUpdate.newCameraPosition(
-              CameraPosition(target: location, zoom: 15.0),
-            ),
-          );
-
-          // Add a marker for the current location
-          addMyMarker(location);
-        });
-      });
-    } catch (e) {
-      print('Error in live location: $e');
-
-      // Show an error message to the user
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error updating live location: $e')),
-      );
-    }
-  }
-
-  // Fetch LatLng from Firebase
-  Future<LatLng> fetchLatLngFromFirebase() async {
-    try {
-      String userId = FirebaseAuth.instance.currentUser!.uid;
-
-      DocumentSnapshot doc = await FirebaseFirestore.instance
-          .collection('babysitters')
-          .doc(userId)
-          .get();
-
-      if (!doc.exists) {
-        throw Exception('Babysitter document not found');
-      }
-
-      final data = doc.data() as Map<String, dynamic>?; // Cast to map or null
-      if (data == null ||
-          !data.containsKey('latitude') ||
-          !data.containsKey('longitude')) {
-        throw Exception('Latitude or longitude field missing in Firestore');
-      }
-
-      double latitude = data['latitude'];
-      double longitude = data['longitude'];
-
-      return LatLng(latitude, longitude);
-    } catch (e) {
-      print('Error fetching LatLng: $e');
-      throw Exception('Could not fetch location');
-    }
-  }
 
   // Load custom location icon
   Future<void> _loadCustomIcons() async {
@@ -147,37 +74,42 @@ class _ViewMap1State extends State<ViewMap1> {
     _filterMarkers();
   }
 
-  // Filter markers based on geofence radius
-  void _filterMarkers() {
-    List<LatLng> markerPositions = [
-      const LatLng(7.313675, 125.670341),
-      const LatLng(7.313700, 125.670400),
-      const LatLng(7.314000, 125.670800),
-    ];
+  // Filter markers based on geofence radius and Firestore data
+  void _filterMarkers() async {
+    try {
+      final querySnapshot =
+          await FirebaseFirestore.instance.collection('babysitters').get();
 
-    setState(() {
-      markers.clear();
-      for (var position in markerPositions) {
-        final distance = Geolocator.distanceBetween(
-          location.latitude,
-          location.longitude,
-          position.latitude,
-          position.longitude,
-        );
+      setState(() {
+        markers.clear();
+        for (var doc in querySnapshot.docs) {
+          final data = doc.data() as Map<String, dynamic>;
+          final double latitude = data['latitude'] ?? 0.0;
+          final double longitude = data['longitude'] ?? 0.0;
 
-        if (distance <= _radius) {
-          markers.add(
-            Marker(
-              markerId: MarkerId(position.toString()),
-              position: position,
-              icon: BitmapDescriptor.defaultMarker,
-              infoWindow: InfoWindow(title: position.toString()),
-              onTap: () => _showDashboard(), // Navigate to dashboard
-            ),
+          final distance = Geolocator.distanceBetween(
+            location.latitude,
+            location.longitude,
+            latitude,
+            longitude,
           );
+
+          if (distance <= _radius) {
+            markers.add(
+              Marker(
+                markerId: MarkerId(doc.id),
+                position: LatLng(latitude, longitude),
+                icon: BitmapDescriptor.defaultMarker,
+                infoWindow: InfoWindow(title: data['name'] ?? 'Babysitter'),
+                onTap: () => _showProfileDialog(doc.id),
+              ),
+            );
+          }
         }
-      }
-    });
+      });
+    } catch (e) {
+      print('Error fetching babysitters: $e');
+    }
   }
 
   // Add user's current location marker
@@ -199,12 +131,42 @@ class _ViewMap1State extends State<ViewMap1> {
     _filterMarkers();
   }
 
-  // Navigate to the nanny dashboard
-  void _showDashboard() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const DashboardNanny(),
+  // Live location updates
+  void _liveLocation() {
+    try {
+      LocationSettings locationSettings = const LocationSettings(
+        accuracy: LocationAccuracy.high,
+        distanceFilter: 100,
+      );
+
+      Geolocator.getPositionStream(locationSettings: locationSettings)
+          .listen((Position position) {
+        lat = position.latitude.toString();
+        long = position.longitude.toString();
+        setState(() {
+          location = LatLng(position.latitude, position.longitude);
+          locationMsg = 'Lat: $lat , Long: $long';
+          _customInfoWindowController.googleMapController?.animateCamera(
+              CameraUpdate.newCameraPosition(
+                  CameraPosition(target: location, zoom: 15.0)));
+
+          addMyMarker(location);
+        });
+      });
+    } catch (e) {
+      print('Error in live location: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error updating live location: $e')),
+      );
+    }
+  }
+
+  // Show babysitter profile dialog
+  void _showProfileDialog(String babysitterId) {
+    showDialog(
+      context: context,
+      builder: (context) => ProfileDialog(
+        babysitterId: babysitterId, // Pass the babysitterId dynamically
       ),
     );
   }
@@ -226,15 +188,6 @@ class _ViewMap1State extends State<ViewMap1> {
       _liveLocation();
     }).catchError((error) {
       print('Error getting initial location: $error');
-    });
-
-    fetchLatLngFromFirebase().then((latLng) {
-      setState(() {
-        location = latLng;
-        _addGeofenceCircle(location);
-      });
-    }).catchError((error) {
-      print('Error fetching babysitter location: $error');
     });
   }
 
@@ -289,7 +242,7 @@ class _ViewMap1State extends State<ViewMap1> {
             padding: const EdgeInsets.all(8.0),
             child: Column(
               children: [
-                Text("Adjust Geofence Radius: ${_radius.toInt()} meters"),
+                Text("Adjust Geofence Radius: \${_radius.toInt()} meters"),
                 Slider(
                   min: 100,
                   max: 2000,

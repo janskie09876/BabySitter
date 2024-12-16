@@ -9,7 +9,6 @@ import 'package:babysitter/menu-chatpage/chatpage1.dart';
 import 'package:babysitter/notifications-stylepage/notif.dart';
 import 'package:babysitter/notifications-stylepage/notificationpage.dart';
 import 'package:babysitter/notifications-stylepage/styles.dart';
-import 'package:babysitter/pages/viewmap1.dart';
 import 'package:babysitter/register-settingspage/settings.dart'
     as my_settings; // Alias for Settings
 import 'package:babysitter/register-settingspage/settings.dart';
