@@ -244,7 +244,7 @@ class _EditBabysitterProfilePageState extends State<EditBabysitterProfilePage> {
                 IconButton(
                   onPressed: () {},
                   icon: CircleAvatar(
-                    backgroundColor: Colors.blue,
+                    backgroundColor: Color(0xFFC47F42),
                     radius: 25,
                     child: Icon(
                       Icons.close_rounded,
@@ -271,7 +271,7 @@ class _EditBabysitterProfilePageState extends State<EditBabysitterProfilePage> {
             Container(
               padding: EdgeInsets.symmetric(horizontal: 20),
               decoration: BoxDecoration(
-                color: Colors.blue[50],
+                color: Color(0xFFF5F5F5),
                 borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(45),
                   topRight: Radius.circular(45),
@@ -306,7 +306,7 @@ class _EditBabysitterProfilePageState extends State<EditBabysitterProfilePage> {
                             icon: Icon(
                               Icons.add_circle,
                               size: 45,
-                              color: Colors.blue,
+                              color: Color(0xFFC47F42),
                             ),
                           ),
                         ),
@@ -386,7 +386,7 @@ class _EditBabysitterProfilePageState extends State<EditBabysitterProfilePage> {
                       IconButton(
                         onPressed: getLocation,
                         icon: Icon(Icons.location_on),
-                        color: Colors.blue,
+                        color: Color(0xFFC47F42),
                       ),
                     ],
                   ),
@@ -457,7 +457,7 @@ class _EditBabysitterProfilePageState extends State<EditBabysitterProfilePage> {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      backgroundColor: Colors.blue,
+                      backgroundColor: Color(0xFFC47F42),
                       minimumSize: Size.fromHeight(45),
                     ),
                     onPressed: () {
