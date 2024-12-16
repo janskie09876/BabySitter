@@ -1,6 +1,5 @@
 import 'package:babysitter/home-paymentpage/dashboard.dart';
 import 'package:babysitter/home-paymentpage/dashboard_nanny.dart';
-import 'package:babysitter/register-settingspage/changepass.dart';
 import 'package:babysitter/register-settingspage/recoverpassword.dart';
 import 'package:babysitter/register-settingspage/registration.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -27,6 +26,11 @@ class _WelcomeBackState extends State<WelcomeBack> {
   }
 
   Future<void> loginUser() async {
+    setState(() {
+      isError = false; // Reset error state before login attempt
+      errorMessage = "";
+    });
+
     try {
       UserCredential userCredential =
           await FirebaseAuth.instance.signInWithEmailAndPassword(
@@ -87,18 +91,18 @@ class _WelcomeBackState extends State<WelcomeBack> {
         } else if (e.code == 'user-not-found') {
           errorMessage = 'The email address is not registered.';
         } else if (e.code == 'wrong-password') {
-          errorMessage = 'The password entered is incorrect.';
+          errorMessage = 'Incorrect email and password.';
         } else if (e.code == 'user-disabled') {
           errorMessage =
               'The account associated with this email has been disabled.';
         } else {
-          errorMessage = 'An unexpected error occurred. Please try again.';
+          errorMessage = 'Incorrect email and password. Please try again!';
         }
       });
     } catch (e) {
       setState(() {
         isError = true;
-        errorMessage = 'An unexpected error occurred. Please try again.';
+        errorMessage = 'Incorrect email and password. Please try again!';
       });
     }
   }
@@ -106,7 +110,7 @@ class _WelcomeBackState extends State<WelcomeBack> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFF5F5F5), // Light Background color
+      backgroundColor: const Color(0xFFF5F5F5), // Light Background color
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -151,16 +155,16 @@ class _WelcomeBackState extends State<WelcomeBack> {
                 controller: emailController,
                 decoration: InputDecoration(
                   labelText: 'Enter your email',
-                  labelStyle:
-                      TextStyle(color: Color(0xFF000000)), // Primary Text color
+                  labelStyle: const TextStyle(
+                      color: Color(0xFF000000)), // Primary Text color
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10.0),
-                    borderSide: BorderSide(
+                    borderSide: const BorderSide(
                         color: Color(0xFFE3C3A3)), // Beige border color
                   ),
                 ),
                 keyboardType: TextInputType.emailAddress,
-                style: TextStyle(
+                style: const TextStyle(
                     color: Color(0xFF000000)), // Primary Text in input
               ),
               const SizedBox(height: 20),
@@ -185,11 +189,11 @@ class _WelcomeBackState extends State<WelcomeBack> {
                 obscureText: !_isPasswordVisible,
                 decoration: InputDecoration(
                   labelText: 'Enter your password',
-                  labelStyle:
-                      TextStyle(color: Color(0xFF000000)), // Primary Text color
+                  labelStyle: const TextStyle(
+                      color: Color(0xFF000000)), // Primary Text color
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10.0),
-                    borderSide: BorderSide(
+                    borderSide: const BorderSide(
                         color: Color(0xFFE3C3A3)), // Beige border color
                   ),
                   suffixIcon: IconButton(
@@ -197,8 +201,8 @@ class _WelcomeBackState extends State<WelcomeBack> {
                       _isPasswordVisible
                           ? Icons.visibility
                           : Icons.visibility_off,
-                      color:
-                          Color(0xFF000000), // Primary Text (Black) icon color
+                      color: const Color(
+                          0xFF000000), // Primary Text (Black) icon color
                     ),
                     onPressed: () {
                       setState(() {
@@ -207,9 +211,23 @@ class _WelcomeBackState extends State<WelcomeBack> {
                     },
                   ),
                 ),
-                style: TextStyle(
+                style: const TextStyle(
                     color: Color(0xFF000000)), // Primary Text in input
               ),
+
+              // Error Message
+              if (isError)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8.0),
+                  child: Text(
+                    errorMessage,
+                    style: const TextStyle(
+                      color: Colors.red, // Error message color
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+
               const SizedBox(height: 40),
 
               // Login Button
@@ -217,7 +235,8 @@ class _WelcomeBackState extends State<WelcomeBack> {
                 width: double.infinity,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(0xFFC47F42), // Orange button color
+                    backgroundColor:
+                        const Color(0xFFC47F42), // Orange button color
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10.0),
                     ),

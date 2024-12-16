@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:babysitter/requirement-babysitterprofilepage/req.dart';
 import 'package:babysitter/requirement-babysitterprofilepage/resources/utils.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -239,16 +240,19 @@ class _EditBabysitterProfilePageState extends State<EditBabysitterProfilePage> {
             SizedBox(height: 15),
             // Close Button
             Row(
-              mainAxisAlignment: MainAxisAlignment.end,
+              mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 IconButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.pop(
+                        context); // Navigate back to the previous screen
+                  },
                   icon: CircleAvatar(
-                    backgroundColor: Color(0xFFC47F42),
+                    backgroundColor: AppColors.primaryColor,
                     radius: 25,
                     child: Icon(
-                      Icons.close_rounded,
-                      color: Colors.white,
+                      Icons.arrow_back,
+                      color: AppColors.whiteColor,
                       size: 30,
                     ),
                   ),
@@ -451,6 +455,27 @@ class _EditBabysitterProfilePageState extends State<EditBabysitterProfilePage> {
                     }).toList(),
                   ),
                   const SizedBox(height: 20),
+
+                  // Upload Requirements Button
+                  ElevatedButton(
+                    onPressed: () {
+                      // Navigate to the ImagePickerHelper class
+                      ImagePickerHelper(context: context)
+                          .showImagePickerOptions();
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Color(0xFFC47F42),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      minimumSize: Size.fromHeight(45),
+                    ),
+                    child: const Text(
+                      'Upload Requirements',
+                      style: TextStyle(fontSize: 23, color: Colors.white),
+                    ),
+                  ),
+                  const SizedBox(height: 15),
                   // Save Button
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
