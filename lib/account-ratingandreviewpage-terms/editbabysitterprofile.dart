@@ -10,17 +10,6 @@ import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 
-class AppColors {
-  static const Color primaryColor = Color(0xFFC47F42); // Orange
-  static const Color lightBackground = Color(0xFFF5F5F5); // Light background
-  static const Color beige = Color(0xFFE3C3A3); // Beige for highlights
-  static const Color coffeeBrown = Color(0xFF51331A); // Coffee Brown
-  static const Color lightCoffeeBrown = Color(0xFF7B5B42); // Light Coffee Brown
-  static const Color blackColor = Color(0xFF000000); // Black text
-  static const Color grayColor = Color(0xFF7D7D7D); // Gray for secondary text
-  static const Color whiteColor = Color(0xFFFFFFFF); // White
-}
-
 final List<String> genderOptions = <String>[
   'Male',
   'Female',
@@ -255,7 +244,7 @@ class _EditBabysitterProfilePageState extends State<EditBabysitterProfilePage> {
                 IconButton(
                   onPressed: () {},
                   icon: CircleAvatar(
-                    backgroundColor: Color(0xFFC47F42),
+                    backgroundColor: Colors.blue,
                     radius: 25,
                     child: Icon(
                       Icons.close_rounded,
@@ -282,7 +271,7 @@ class _EditBabysitterProfilePageState extends State<EditBabysitterProfilePage> {
             Container(
               padding: EdgeInsets.symmetric(horizontal: 20),
               decoration: BoxDecoration(
-                color: AppColors.lightBackground,
+                color: Colors.blue[50],
                 borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(45),
                   topRight: Radius.circular(45),
@@ -317,7 +306,7 @@ class _EditBabysitterProfilePageState extends State<EditBabysitterProfilePage> {
                             icon: Icon(
                               Icons.add_circle,
                               size: 45,
-                              color: Color(0xFFC47F42),
+                              color: Colors.blue,
                             ),
                           ),
                         ),
@@ -397,7 +386,7 @@ class _EditBabysitterProfilePageState extends State<EditBabysitterProfilePage> {
                       IconButton(
                         onPressed: getLocation,
                         icon: Icon(Icons.location_on),
-                        color: Color(0xFFC47F42),
+                        color: Colors.blue,
                       ),
                     ],
                   ),
@@ -468,7 +457,7 @@ class _EditBabysitterProfilePageState extends State<EditBabysitterProfilePage> {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      backgroundColor: Color(0xFFC47F42),
+                      backgroundColor: Colors.blue,
                       minimumSize: Size.fromHeight(45),
                     ),
                     onPressed: () {
